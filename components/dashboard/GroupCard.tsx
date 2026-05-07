@@ -9,7 +9,7 @@ import { COLORS } from "@/src/styles/colors";
 type Props = {
 
     name: string;
-    members: string;
+    lastActivity: string;
     amount: string;
     color: string;
 };
@@ -17,11 +17,13 @@ type Props = {
 export default function GroupCard({
 
                                       name,
-                                      members,
+                                      lastActivity,
                                       amount,
                                       color,
 
                                   }: Props) {
+
+    const positive = amount.includes("+");
 
     return (
 
@@ -48,27 +50,59 @@ export default function GroupCard({
                         {name}
                     </Text>
 
-                    <Text style={styles.members}>
-                        {members}
+                    <Text style={styles.activity}>
+                        {lastActivity}
                     </Text>
+
+                    <View style={styles.avatarRow}>
+
+                        <View style={styles.avatar}>
+                            <Text style={styles.avatarText}>
+                                A
+                            </Text>
+                        </View>
+
+                        <View style={styles.avatar}>
+                            <Text style={styles.avatarText}>
+                                M
+                            </Text>
+                        </View>
+
+                        <View style={styles.avatar}>
+                            <Text style={styles.avatarText}>
+                                J
+                            </Text>
+                        </View>
+
+                    </View>
 
                 </View>
 
             </View>
 
-            <Text
-                style={[
-                    styles.amount,
-                    {
-                        color:
-                            amount.includes("+")
-                                ? "#10B981"
-                                : "#EF4444"
-                    }
-                ]}
-            >
-                {amount}
-            </Text>
+            <View style={styles.rightSection}>
+
+                <Text
+                    style={[
+                        styles.amount,
+                        {
+                            color:
+                                positive
+                                    ? "#10B981"
+                                    : "#EF4444"
+                        }
+                    ]}
+                >
+                    {amount}
+                </Text>
+
+                <Text style={styles.status}>
+                    {positive
+                        ? "Te deben"
+                        : "Debes"}
+                </Text>
+
+            </View>
 
         </View>
     );
@@ -78,13 +112,12 @@ const styles = StyleSheet.create({
 
     card: {
         backgroundColor: COLORS.white,
-        borderRadius: 22,
+        borderRadius: 24,
         padding: 18,
         marginBottom: 16,
 
         flexDirection: "row",
         justifyContent: "space-between",
-        alignItems: "center",
 
         shadowColor: "#000",
         shadowOpacity: 0.04,
@@ -95,12 +128,12 @@ const styles = StyleSheet.create({
 
     leftSection: {
         flexDirection: "row",
-        alignItems: "center",
+        flex: 1,
     },
 
     iconContainer: {
-        width: 56,
-        height: 56,
+        width: 58,
+        height: 58,
         borderRadius: 18,
         justifyContent: "center",
         alignItems: "center",
@@ -113,18 +146,52 @@ const styles = StyleSheet.create({
 
     name: {
         fontSize: 17,
-        fontWeight: "600",
+        fontWeight: "700",
         color: COLORS.text,
     },
 
-    members: {
+    activity: {
         marginTop: 4,
         color: COLORS.subtitle,
-        fontSize: 14,
+        fontSize: 13,
+    },
+
+    avatarRow: {
+        flexDirection: "row",
+        marginTop: 12,
+    },
+
+    avatar: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: "#E5E7EB",
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: -8,
+        borderWidth: 2,
+        borderColor: COLORS.white,
+    },
+
+    avatarText: {
+        fontSize: 11,
+        fontWeight: "bold",
+        color: COLORS.text,
+    },
+
+    rightSection: {
+        alignItems: "flex-end",
+        justifyContent: "center",
     },
 
     amount: {
-        fontSize: 20,
+        fontSize: 22,
         fontWeight: "bold",
+    },
+
+    status: {
+        marginTop: 6,
+        color: COLORS.subtitle,
+        fontSize: 13,
     },
 });

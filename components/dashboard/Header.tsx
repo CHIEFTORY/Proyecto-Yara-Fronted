@@ -1,3 +1,9 @@
+import { TouchableOpacity } from "react-native";
+
+import { router } from "expo-router";
+
+import { removeToken } from "@/src/utils/authStorage";
+
 import {
     View,
     Text,
@@ -6,7 +12,27 @@ import {
 
 import { COLORS } from "@/src/styles/colors";
 
-export default function Header() {
+type Props = {
+
+    name: string;
+};
+
+export default function Header({
+                                   name
+                               }: Props) {
+    const handleLogout = async () => {
+
+        await removeToken();
+
+        router.replace("/");
+    };
+    const firstName = name.split(" ")[0];
+    const initials = name
+        ?.split(" ")
+        .map(word => word[0])
+        .join("")
+        .substring(0, 2)
+        .toUpperCase();
 
     return (
 
@@ -15,22 +41,25 @@ export default function Header() {
             <View>
 
                 <Text style={styles.title}>
-                    Hola, Juan 👋
+                    Hola, {firstName} 👋
                 </Text>
 
                 <Text style={styles.subtitle}>
-                    Aquí está el resumen de tus gastos
+                    Tus finanzas al día
                 </Text>
 
             </View>
 
-            <View style={styles.avatar}>
+            <TouchableOpacity
+                style={styles.avatar}
+                onPress={handleLogout}
+            >
 
                 <Text style={styles.avatarText}>
-                    JP
+                    {initials}
                 </Text>
 
-            </View>
+            </TouchableOpacity>
 
         </View>
     );
@@ -59,9 +88,9 @@ const styles = StyleSheet.create({
     },
 
     avatar: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
+        width: 52,
+        height: 52,
+        borderRadius: 26,
         backgroundColor: COLORS.primary,
         justifyContent: "center",
         alignItems: "center",

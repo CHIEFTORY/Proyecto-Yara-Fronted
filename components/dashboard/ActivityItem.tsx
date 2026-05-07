@@ -11,6 +11,7 @@ type Props = {
     title: string;
     subtitle: string;
     amount: string;
+    time: string;
     positive?: boolean;
 };
 
@@ -19,6 +20,7 @@ export default function ActivityItem({
                                          title,
                                          subtitle,
                                          amount,
+                                         time,
                                          positive = false,
 
                                      }: Props) {
@@ -40,8 +42,18 @@ export default function ActivityItem({
                         }
                     ]}
                 >
-                    <Text style={styles.icon}>
-                        {positive ? "↘" : "↗"}
+                    <Text
+                        style={[
+                            styles.icon,
+                            {
+                                color:
+                                    positive
+                                        ? "#10B981"
+                                        : "#2563EB"
+                            }
+                        ]}
+                    >
+                        {positive ? "↓" : "↑"}
                     </Text>
                 </View>
 
@@ -53,6 +65,10 @@ export default function ActivityItem({
 
                     <Text style={styles.subtitle}>
                         {subtitle}
+                    </Text>
+
+                    <Text style={styles.time}>
+                        {time}
                     </Text>
 
                 </View>
@@ -84,27 +100,30 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
 
-        marginBottom: 20,
+        paddingVertical: 14,
+
+        borderBottomWidth: 1,
+        borderBottomColor: "#F3F4F6",
     },
 
     leftSection: {
         flexDirection: "row",
         alignItems: "center",
+        flex: 1,
     },
 
     iconContainer: {
-        width: 50,
-        height: 50,
-        borderRadius: 16,
+        width: 52,
+        height: 52,
+        borderRadius: 18,
         justifyContent: "center",
         alignItems: "center",
         marginRight: 14,
     },
 
     icon: {
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: "bold",
-        color: "#2563EB",
     },
 
     title: {
@@ -117,6 +136,12 @@ const styles = StyleSheet.create({
         marginTop: 4,
         fontSize: 13,
         color: COLORS.subtitle,
+    },
+
+    time: {
+        marginTop: 4,
+        fontSize: 12,
+        color: "#9CA3AF",
     },
 
     amount: {

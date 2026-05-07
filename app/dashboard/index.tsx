@@ -1,164 +1,183 @@
 import Header from "@/components/dashboard/Header";
-import SummaryCard from "@/components/dashboard/SummaryCard";
+import BalanceCard from "@/components/dashboard/BalanceCard";
 import QuickAction from "@/components/dashboard/QuickAction";
 import GroupCard from "@/components/dashboard/GroupCard";
 import ActivityItem from "@/components/dashboard/ActivityItem";
-
+import FloatingButton from "@/components/dashboard/FloatingButton";
 import ExpenseChart from "@/components/dashboard/ExpenseChart";
+
+import { useEffect, useState } from "react";
+
+import { getToken } from "@/src/utils/authStorage";
+
+import { getMeRequest } from "@/src/services/authService";
+
 import {
     View,
     Text,
     StyleSheet,
     ScrollView,
-    TouchableOpacity,
 } from "react-native";
 
 import { COLORS } from "@/src/styles/colors";
 
 export default function DashboardScreen() {
 
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+
+        loadUser();
+
+    }, []);
+
+    const loadUser = async () => {
+
+        try {
+
+            const token = await getToken();
+
+            if (!token) return;
+
+            const userData = await getMeRequest(
+                token
+            );
+
+            setUser(userData);
+
+        } catch (error) {
+
+            console.log(error);
+        }
+    };
+
     return (
 
-        <ScrollView style={styles.container}>
+        <View style={{ flex: 1 }}>
 
-            <Header />
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={{
+                    paddingBottom: 120,
+                }}
+            >
 
-            <SummaryCard
-                title="Te deben"
-                amount="$350"
-                color="#22C55E"
-                background="#ECFDF3"
-                percent="+12%"
-            />
+                <Header
+                    name={user?.nombre || "Usuario"}
+                />
 
-            <SummaryCard
-                title="Debes"
-                amount="$195"
-                color="#EF4444"
-                background="#FEF2F2"
-                percent="-8%"
-            />
+                <BalanceCard />
 
-            <SummaryCard
-                title="Balance neto"
-                amount="+$155"
-                color="#2563EB"
-                background="#EFF6FF"
-                percent="+4%"
-            />
+                <ExpenseChart />
 
-            <ExpenseChart />
+                <View style={styles.section}>
 
-            <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>
+                        Acciones
+                    </Text>
 
-                <Text style={styles.sectionTitle}>
-                    Acciones rápidas
-                </Text>
+                    <View style={styles.quickActionsGrid}>
 
-                <View style={styles.quickActionsGrid}>
+                        <QuickAction
+                            title="Nuevo gasto"
+                            icon="💸"
+                            color="#2563EB"
+                            background="#DBEAFE"
+                        />
 
-                    <QuickAction
-                        title="Nuevo gasto"
-                        icon="💸"
-                        color="#2563EB"
-                        background="#DBEAFE"
+                        <QuickAction
+                            title="Registrar pago"
+                            icon="💳"
+                            color="#10B981"
+                            background="#D1FAE5"
+                        />
+
+                        <QuickAction
+                            title="Crear grupo"
+                            icon="👥"
+                            color="#9333EA"
+                            background="#F3E8FF"
+                        />
+
+                    </View>
+
+                </View>
+
+                <View style={styles.section}>
+
+                    <Text style={styles.sectionTitle}>
+                        Mis grupos
+                    </Text>
+
+                    <GroupCard
+                        name="Apartamento"
+                        lastActivity="Último gasto: Netflix"
+                        amount="$150"
+                        color="#3B82F6"
                     />
 
-                    <QuickAction
-                        title="Registrar pago"
-                        icon="💳"
-                        color="#10B981"
-                        background="#D1FAE5"
-                    />
-
-                    <QuickAction
-                        title="Crear grupo"
-                        icon="👥"
+                    <GroupCard
+                        name="Viaje a la playa"
+                        lastActivity="Último gasto: Hotel"
+                        amount="+$230"
                         color="#9333EA"
-                        background="#F3E8FF"
                     />
 
-                    <QuickAction
-                        title="Auditoría"
-                        icon="📈"
-                        color="#F97316"
-                        background="#FFEDD5"
-                    />
-
-                </View>
-
-            </View>
-
-            <View style={styles.section}>
-
-                <Text style={styles.sectionTitle}>
-                    Mis grupos
-                </Text>
-
-                <GroupCard
-                    name="Apartamento"
-                    members="4 miembros"
-                    amount="$150"
-                    color="#3B82F6"
-                />
-
-                <GroupCard
-                    name="Viaje a la playa"
-                    members="6 miembros"
-                    amount="+$230"
-                    color="#9333EA"
-                />
-
-                <GroupCard
-                    name="Familia"
-                    members="5 miembros"
-                    amount="$45"
-                    color="#22C55E"
-                />
-
-            </View>
-
-            <View style={styles.section}>
-
-                <Text style={styles.sectionTitle}>
-                    Actividad reciente
-                </Text>
-
-                <View style={styles.activityCard}>
-
-                    <ActivityItem
-                        title="Supermercado"
-                        subtitle="María García • Apartamento"
-                        amount="$85"
-                    />
-
-                    <ActivityItem
-                        title="Pago recibido"
-                        subtitle="Carlos López • Viaje a la playa"
-                        amount="+$120"
-                        positive
-                    />
-
-                    <ActivityItem
-                        title="Cena restaurante"
-                        subtitle="Tú • Familia"
-                        amount="$65"
-                    />
-
-                    <ActivityItem
-                        title="Pago enviado a Ana"
-                        subtitle="Tú • Apartamento"
-                        amount="$100"
+                    <GroupCard
+                        name="Familia"
+                        lastActivity="Último gasto: Cena"
+                        amount="$45"
+                        color="#22C55E"
                     />
 
                 </View>
 
-            </View>
+                <View style={styles.section}>
 
+                    <Text style={styles.sectionTitle}>
+                        Actividad
+                    </Text>
 
+                    <View style={styles.activityCard}>
 
+                        <ActivityItem
+                            title="Supermercado"
+                            subtitle="María García • Apartamento"
+                            amount="$85"
+                            time="Hace 2h"
+                        />
 
-        </ScrollView>
+                        <ActivityItem
+                            title="Pago recibido"
+                            subtitle="Carlos López • Viaje a la playa"
+                            amount="+$120"
+                            time="Ayer"
+                            positive
+                        />
+
+                        <ActivityItem
+                            title="Cena restaurante"
+                            subtitle="Tú • Familia"
+                            amount="$65"
+                            time="Hace 5h"
+                        />
+
+                        <ActivityItem
+                            title="Pago enviado a Ana"
+                            subtitle="Tú • Apartamento"
+                            amount="$100"
+                            time="Hace 1 día"
+                        />
+
+                    </View>
+
+                </View>
+
+            </ScrollView>
+
+            <FloatingButton />
+
+        </View>
     );
 }
 
@@ -169,12 +188,14 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.background,
         padding: 20,
     },
+
     quickActionsGrid: {
         flexDirection: "row",
         flexWrap: "wrap",
         justifyContent: "space-between",
         gap: 14,
     },
+
     activityCard: {
         backgroundColor: COLORS.white,
         borderRadius: 24,
@@ -187,16 +208,6 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
 
-
-
-
-
-
-
-
-
-
-
     section: {
         marginBottom: 30,
     },
@@ -207,6 +218,4 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         color: COLORS.text,
     },
-
-
 });

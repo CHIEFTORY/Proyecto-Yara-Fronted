@@ -11,16 +11,44 @@ import {
     TouchableOpacity,
     StyleSheet,
     SafeAreaView,
+    ActivityIndicator,
 } from "react-native";
 
 export default function LoginScreen() {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     const handleLogin = async () => {
 
+        // 🔥 VALIDAR CAMPOS
+        if (!email || !password) {
+
+            setErrorMessage(
+                "Completa todos los campos"
+            );
+
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(email)) {
+
+            setErrorMessage(
+                "Ingresa un correo válido"
+            );
+
+            return;
+        }
+
         try {
+
+            setLoading(true);
+
+            setErrorMessage("");
 
             const response = await loginRequest(
                 email,
@@ -30,22 +58,37 @@ export default function LoginScreen() {
             // 🔥 MFA
             if (response.mfaRequired) {
 
-                console.log("MFA requerido");
+                setLoading(false);
 
                 return;
             }
 
-            // 🔥 GUARDAR JWT
+            // 🔥 GUARDAR TOKEN
             await saveToken(
                 response.token
             );
+
             router.replace("/dashboard");
 
-            console.log("TOKEN GUARDADO");
+        } catch (error: any) {
 
-        } catch (error) {
+            // 🔥 ERROR BACKEND
+            if (error.response?.status === 500) {
 
-            console.log(error);
+                setErrorMessage(
+                    "Correo o contraseña incorrectos"
+                );
+
+            } else {
+
+                setErrorMessage(
+                    "No se pudo conectar al servidor"
+                );
+            }
+
+        } finally {
+
+            setLoading(false);
         }
     };
 
@@ -94,13 +137,35 @@ export default function LoginScreen() {
                     onChangeText={setPassword}
                 />
 
+                {
+                    errorMessage ? (
+
+                        <Text style={styles.errorText}>
+                            {errorMessage}
+                        </Text>
+
+                    ) : null
+                }
+
                 <TouchableOpacity
                     style={styles.button}
                     onPress={handleLogin}
+                    disabled={loading}
                 >
-                    <Text style={styles.buttonText}>
-                        Iniciar sesión
-                    </Text>
+
+                    {
+                        loading ? (
+
+                            <ActivityIndicator color="white" />
+
+                        ) : (
+
+                            <Text style={styles.buttonText}>
+                                Iniciar sesión
+                            </Text>
+                        )
+                    }
+
                 </TouchableOpacity>
 
             </View>
@@ -116,6 +181,13 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.background,
         justifyContent: "center",
         padding: 24,
+    },
+
+    errorText: {
+        color: "#EF4444",
+        marginBottom: 14,
+        fontSize: 14,
+        fontWeight: "500",
     },
 
     logoContainer: {

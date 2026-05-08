@@ -3,8 +3,11 @@ import BalanceCard from "@/components/dashboard/BalanceCard";
 import QuickAction from "@/components/dashboard/QuickAction";
 import GroupCard from "@/components/dashboard/GroupCard";
 import ActivityItem from "@/components/dashboard/ActivityItem";
-import FloatingButton from "@/components/dashboard/FloatingButton";
 import ExpenseChart from "@/components/dashboard/ExpenseChart";
+
+import { getMyGroups } from "@/src/services/groupService";
+
+import { router } from "expo-router";
 
 import { useEffect, useState } from "react";
 
@@ -23,27 +26,36 @@ import { COLORS } from "@/src/styles/colors";
 
 export default function DashboardScreen() {
 
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] =
+        useState<any>(null);
+
+    const [groups, setGroups] =
+        useState<any[]>([]);
 
     useEffect(() => {
 
-        loadUser();
+        loadDashboard();
 
     }, []);
 
-    const loadUser = async () => {
+    const loadDashboard = async () => {
 
         try {
 
-            const token = await getToken();
+            const token =
+                await getToken();
 
             if (!token) return;
 
-            const userData = await getMeRequest(
-                token
-            );
+            const userData =
+                await getMeRequest(token);
 
             setUser(userData);
+
+            const groupsData =
+                await getMyGroups();
+
+            setGroups(groupsData);
 
         } catch (error) {
 
@@ -97,6 +109,11 @@ export default function DashboardScreen() {
                             icon="👥"
                             color="#9333EA"
                             background="#F3E8FF"
+                            onPress={() => {
+                                router.push(
+                                    "/groups/create" as any
+                                );
+                            }}
                         />
 
                     </View>
@@ -109,26 +126,37 @@ export default function DashboardScreen() {
                         Mis grupos
                     </Text>
 
-                    <GroupCard
-                        name="Apartamento"
-                        lastActivity="Último gasto: Netflix"
-                        amount="$150"
-                        color="#3B82F6"
-                    />
+                    {
+                        groups.length === 0 ? (
 
-                    <GroupCard
-                        name="Viaje a la playa"
-                        lastActivity="Último gasto: Hotel"
-                        amount="+$230"
-                        color="#9333EA"
-                    />
+                            <View style={styles.emptyCard}>
 
-                    <GroupCard
-                        name="Familia"
-                        lastActivity="Último gasto: Cena"
-                        amount="$45"
-                        color="#22C55E"
-                    />
+                                <Text style={styles.emptyTitle}>
+                                    No tienes grupos todavía
+                                </Text>
+
+                                <Text style={styles.emptySubtitle}>
+                                    Crea tu primer grupo para empezar a dividir gastos
+                                </Text>
+
+                            </View>
+
+                        ) : (
+
+                            groups.map((group, index) => (
+
+                                <GroupCard
+                                    key={group.id}
+                                    name={group.nombre}
+                                    lastActivity={`${group.cantidadMiembros} miembros`}
+                                    amount=""
+                                    color="#3B82F6"
+                                />
+
+                            ))
+
+                        )
+                    }
 
                 </View>
 
@@ -175,8 +203,6 @@ export default function DashboardScreen() {
 
             </ScrollView>
 
-            <FloatingButton />
-
         </View>
     );
 }
@@ -191,9 +217,8 @@ const styles = StyleSheet.create({
 
     quickActionsGrid: {
         flexDirection: "row",
-        flexWrap: "wrap",
         justifyContent: "space-between",
-        gap: 14,
+        gap: 12,
     },
 
     activityCard: {
@@ -217,5 +242,31 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         marginBottom: 16,
         color: COLORS.text,
+    },
+
+    emptyCard: {
+        backgroundColor: COLORS.white,
+        borderRadius: 24,
+        padding: 24,
+        alignItems: "center",
+
+        shadowColor: "#000",
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+
+        elevation: 2,
+    },
+
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: COLORS.text,
+    },
+
+    emptySubtitle: {
+        marginTop: 8,
+        color: COLORS.subtitle,
+        textAlign: "center",
+        lineHeight: 22,
     },
 });

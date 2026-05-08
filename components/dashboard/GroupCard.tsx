@@ -23,7 +23,11 @@ export default function GroupCard({
 
                                   }: Props) {
 
-    const positive = amount.includes("+");
+    const positive =
+        amount?.includes("+");
+
+    const emptyBalance =
+        !amount;
 
     return (
 
@@ -39,12 +43,14 @@ export default function GroupCard({
                         }
                     ]}
                 >
+
                     <Text style={styles.icon}>
                         👥
                     </Text>
+
                 </View>
 
-                <View>
+                <View style={styles.infoContainer}>
 
                     <Text style={styles.name}>
                         {name}
@@ -54,53 +60,49 @@ export default function GroupCard({
                         {lastActivity}
                     </Text>
 
-                    <View style={styles.avatarRow}>
-
-                        <View style={styles.avatar}>
-                            <Text style={styles.avatarText}>
-                                A
-                            </Text>
-                        </View>
-
-                        <View style={styles.avatar}>
-                            <Text style={styles.avatarText}>
-                                M
-                            </Text>
-                        </View>
-
-                        <View style={styles.avatar}>
-                            <Text style={styles.avatarText}>
-                                J
-                            </Text>
-                        </View>
-
-                    </View>
-
                 </View>
 
             </View>
 
             <View style={styles.rightSection}>
 
-                <Text
-                    style={[
-                        styles.amount,
-                        {
-                            color:
-                                positive
-                                    ? "#10B981"
-                                    : "#EF4444"
-                        }
-                    ]}
-                >
-                    {amount}
-                </Text>
+                {
+                    emptyBalance ? (
 
-                <Text style={styles.status}>
-                    {positive
-                        ? "Te deben"
-                        : "Debes"}
-                </Text>
+                        <Text style={styles.emptyText}>
+                            Sin balances pendientes
+                        </Text>
+
+                    ) : (
+
+                        <>
+
+                            <Text
+                                style={[
+                                    styles.amount,
+                                    {
+                                        color:
+                                            positive
+                                                ? "#10B981"
+                                                : "#EF4444"
+                                    }
+                                ]}
+                            >
+                                {amount}
+                            </Text>
+
+                            <Text style={styles.status}>
+                                {
+                                    positive
+                                        ? "Te deben"
+                                        : "Debes"
+                                }
+                            </Text>
+
+                        </>
+
+                    )
+                }
 
             </View>
 
@@ -118,6 +120,7 @@ const styles = StyleSheet.create({
 
         flexDirection: "row",
         justifyContent: "space-between",
+        alignItems: "center",
 
         shadowColor: "#000",
         shadowOpacity: 0.04,
@@ -129,14 +132,17 @@ const styles = StyleSheet.create({
     leftSection: {
         flexDirection: "row",
         flex: 1,
+        alignItems: "center",
     },
 
     iconContainer: {
         width: 58,
         height: 58,
         borderRadius: 18,
+
         justifyContent: "center",
         alignItems: "center",
+
         marginRight: 14,
     },
 
@@ -144,44 +150,26 @@ const styles = StyleSheet.create({
         fontSize: 24,
     },
 
+    infoContainer: {
+        flex: 1,
+    },
+
     name: {
-        fontSize: 17,
+        fontSize: 19,
         fontWeight: "700",
         color: COLORS.text,
     },
 
     activity: {
-        marginTop: 4,
+        marginTop: 6,
         color: COLORS.subtitle,
-        fontSize: 13,
-    },
-
-    avatarRow: {
-        flexDirection: "row",
-        marginTop: 12,
-    },
-
-    avatar: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: "#E5E7EB",
-        justifyContent: "center",
-        alignItems: "center",
-        marginRight: -8,
-        borderWidth: 2,
-        borderColor: COLORS.white,
-    },
-
-    avatarText: {
-        fontSize: 11,
-        fontWeight: "bold",
-        color: COLORS.text,
+        fontSize: 14,
     },
 
     rightSection: {
         alignItems: "flex-end",
         justifyContent: "center",
+        marginLeft: 12,
     },
 
     amount: {
@@ -190,8 +178,16 @@ const styles = StyleSheet.create({
     },
 
     status: {
-        marginTop: 6,
+        marginTop: 4,
         color: COLORS.subtitle,
         fontSize: 13,
+    },
+
+    emptyText: {
+        color: COLORS.subtitle,
+        fontSize: 13,
+        textAlign: "right",
+        maxWidth: 100,
+        lineHeight: 18,
     },
 });

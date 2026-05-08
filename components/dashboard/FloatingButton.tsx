@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
         shadowColor: "#2563EB",
         shadowOpacity: 0.18,
         shadowRadius: 8,
-        backdropFilter: "blur(10px)",
+
         elevation: 8,
     },
 

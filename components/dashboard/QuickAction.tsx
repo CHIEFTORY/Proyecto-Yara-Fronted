@@ -8,11 +8,11 @@ import {
 import { COLORS } from "@/src/styles/colors";
 
 type Props = {
-
     title: string;
     icon: string;
     color: string;
     background: string;
+    onPress?: () => void;
 };
 
 export default function QuickAction({
@@ -21,12 +21,17 @@ export default function QuickAction({
                                         icon,
                                         color,
                                         background,
+                                        onPress,
 
                                     }: Props) {
 
     return (
 
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity
+            style={styles.card}
+            onPress={onPress}
+            activeOpacity={0.8}
+        >
 
             <View
                 style={[
@@ -36,6 +41,7 @@ export default function QuickAction({
                     }
                 ]}
             >
+
                 <Text
                     style={[
                         styles.icon,
@@ -46,6 +52,7 @@ export default function QuickAction({
                 >
                     {icon}
                 </Text>
+
             </View>
 
             <Text style={styles.title}>
@@ -62,7 +69,9 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.white,
         borderRadius: 20,
         padding: 18,
-        width: "48%",
+        flex: 1,
+        minWidth: "30%",
+        maxWidth: "31%",
         alignItems: "center",
 
         shadowColor: "#000",

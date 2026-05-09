@@ -2,6 +2,7 @@ import {
     View,
     Text,
     StyleSheet,
+    TouchableOpacity,
 } from "react-native";
 
 import { COLORS } from "@/src/styles/colors";
@@ -12,6 +13,8 @@ type Props = {
     lastActivity: string;
     amount: string;
     color: string;
+
+    onPress?: () => void;
 };
 
 export default function GroupCard({
@@ -20,6 +23,7 @@ export default function GroupCard({
                                       lastActivity,
                                       amount,
                                       color,
+                                      onPress,
 
                                   }: Props) {
 
@@ -31,7 +35,11 @@ export default function GroupCard({
 
     return (
 
-        <View style={styles.card}>
+        <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.85}
+            onPress={onPress}
+        >
 
             <View style={styles.leftSection}>
 
@@ -106,7 +114,7 @@ export default function GroupCard({
 
             </View>
 
-        </View>
+        </TouchableOpacity>
     );
 }
 

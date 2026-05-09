@@ -16,17 +16,10 @@ export const loginRequest = async (
     return response.data;
 };
 
-export const getMeRequest = async (
-    token: string
-) => {
+export const getMeRequest = async () => {
 
     const response = await api.get(
-        "/auth/me",
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
+        "/auth/me"
     );
 
     return response.data;

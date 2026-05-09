@@ -1,30 +1,14 @@
 import { api } from "./api";
 
-import { getToken } from "@/src/utils/authStorage";
-
 export interface CreateGroupRequest {
     nombre: string;
     descripcion?: string;
 }
 
-const authHeaders = async () => {
-
-    const token = await getToken();
-
-    return {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    };
-};
-
 export const getMyGroups = async () => {
 
-    const config = await authHeaders();
-
     const response = await api.get(
-        "/grupos/mios",
-        config
+        "/grupos/mios"
     );
 
     return response.data;
@@ -34,12 +18,9 @@ export const createGroup = async (
     data: CreateGroupRequest
 ) => {
 
-    const config = await authHeaders();
-
     const response = await api.post(
         "/grupos",
-        data,
-        config
+        data
     );
 
     return response.data;
@@ -49,11 +30,8 @@ export const getGroupUsers = async (
     groupId: number
 ) => {
 
-    const config = await authHeaders();
-
     const response = await api.get(
-        `/grupos/${groupId}/usuarios`,
-        config
+        `/grupos/${groupId}/usuarios`
     );
 
     return response.data;
@@ -63,11 +41,8 @@ export const getGroupSummary = async (
     groupId: number
 ) => {
 
-    const config = await authHeaders();
-
     const response = await api.get(
-        `/grupos/${groupId}/resumen`,
-        config
+        `/grupos/${groupId}/resumen`
     );
 
     return response.data;
@@ -78,14 +53,21 @@ export const addUserToGroup = async (
     userId: number
 ) => {
 
-    const config = await authHeaders();
-
     const response = await api.post(
-        `/grupos/${groupId}/usuarios/${userId}`,
-        {},
-        config
+        `/grupos/${groupId}/usuarios/${userId}`
     );
 
     return response.data;
 };
 
+export const deleteGroup = async (
+    groupId: number
+) => {
+
+    const response =
+        await api.delete(
+            `/grupos/${groupId}`
+        );
+
+    return response.data;
+};

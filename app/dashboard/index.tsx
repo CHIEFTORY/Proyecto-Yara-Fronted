@@ -4,12 +4,17 @@ import QuickAction from "@/components/dashboard/QuickAction";
 import GroupCard from "@/components/dashboard/GroupCard";
 import ActivityItem from "@/components/dashboard/ActivityItem";
 import ExpenseChart from "@/components/dashboard/ExpenseChart";
-
+import {
+    useFocusEffect,
+} from "@react-navigation/native";
 import { getMyGroups } from "@/src/services/groupService";
 
 import { router } from "expo-router";
-
-import { useEffect, useState } from "react";
+import React,
+{
+    useEffect,
+    useState,
+} from "react";
 
 import { getToken } from "@/src/utils/authStorage";
 
@@ -32,11 +37,15 @@ export default function DashboardScreen() {
     const [groups, setGroups] =
         useState<any[]>([]);
 
-    useEffect(() => {
+    useFocusEffect(
 
-        loadDashboard();
+        React.useCallback(() => {
 
-    }, []);
+            loadDashboard();
+
+        }, [])
+
+    );
 
     const loadDashboard = async () => {
 
@@ -48,7 +57,7 @@ export default function DashboardScreen() {
             if (!token) return;
 
             const userData =
-                await getMeRequest(token);
+                await getMeRequest();
 
             setUser(userData);
 
@@ -90,19 +99,6 @@ export default function DashboardScreen() {
 
                     <View style={styles.quickActionsGrid}>
 
-                        <QuickAction
-                            title="Nuevo gasto"
-                            icon="💸"
-                            color="#2563EB"
-                            background="#DBEAFE"
-                        />
-
-                        <QuickAction
-                            title="Registrar pago"
-                            icon="💳"
-                            color="#10B981"
-                            background="#D1FAE5"
-                        />
 
                         <QuickAction
                             title="Crear grupo"
@@ -151,6 +147,11 @@ export default function DashboardScreen() {
                                     lastActivity={`${group.cantidadMiembros} miembros`}
                                     amount=""
                                     color="#3B82F6"
+                                    onPress={() => {
+                                        router.push(
+                                            `/groups/${group.id}` as any
+                                        );
+                                    }}
                                 />
 
                             ))

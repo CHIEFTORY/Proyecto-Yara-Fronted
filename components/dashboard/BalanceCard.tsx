@@ -6,7 +6,27 @@ import {
 
 import { COLORS } from "@/src/styles/colors";
 
-export default function BalanceCard() {
+type Props = {
+
+    balanceGeneral: number;
+
+    totalDebes: number;
+
+    totalTeDeben: number;
+};
+
+export default function BalanceCard({
+
+                                        balanceGeneral,
+
+                                        totalDebes,
+
+                                        totalTeDeben,
+
+                                    }: Props) {
+
+    const positivo =
+        balanceGeneral >= 0;
 
     return (
 
@@ -17,7 +37,16 @@ export default function BalanceCard() {
             </Text>
 
             <Text style={styles.balance}>
-                +S/ 155
+
+                {positivo ? "+" : "-"}
+
+                S/ {
+
+                Math.abs(
+                    balanceGeneral
+                ).toFixed(2)
+            }
+
             </Text>
 
             <View style={styles.divider} />
@@ -31,7 +60,14 @@ export default function BalanceCard() {
                     </Text>
 
                     <Text style={styles.positive}>
-                        +S/ 350
+
+                        +S/ {
+
+                        Number(
+                            totalTeDeben
+                        ).toFixed(2)
+                    }
+
                     </Text>
 
                 </View>
@@ -43,7 +79,14 @@ export default function BalanceCard() {
                     </Text>
 
                     <Text style={styles.negative}>
-                        -S/ 195
+
+                        -S/ {
+
+                        Number(
+                            totalDebes
+                        ).toFixed(2)
+                    }
+
                     </Text>
 
                 </View>

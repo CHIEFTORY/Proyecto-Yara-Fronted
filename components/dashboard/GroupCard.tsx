@@ -11,7 +11,7 @@ type Props = {
 
     name: string;
     lastActivity: string;
-    amount: string;
+    miBalance: number;
     color: string;
 
     onPress?: () => void;
@@ -21,17 +21,12 @@ export default function GroupCard({
 
                                       name,
                                       lastActivity,
-                                      amount,
+                                      miBalance,
                                       color,
                                       onPress,
 
                                   }: Props) {
 
-    const positive =
-        amount?.includes("+");
-
-    const emptyBalance =
-        !amount;
 
     return (
 
@@ -75,10 +70,10 @@ export default function GroupCard({
             <View style={styles.rightSection}>
 
                 {
-                    emptyBalance ? (
+                    miBalance === 0 ? (
 
-                        <Text style={styles.emptyText}>
-                            Sin balances pendientes
+                        <Text style={styles.balanceNeutral}>
+                            Sin balances
                         </Text>
 
                     ) : (
@@ -90,21 +85,29 @@ export default function GroupCard({
                                     styles.amount,
                                     {
                                         color:
-                                            positive
+                                            miBalance > 0
                                                 ? "#10B981"
                                                 : "#EF4444"
                                     }
                                 ]}
                             >
-                                {amount}
+
+                                {
+                                    miBalance > 0
+                                        ? `+S/ ${Math.abs(miBalance)}`
+                                        : `-S/ ${Math.abs(miBalance)}`
+                                }
+
                             </Text>
 
                             <Text style={styles.status}>
+
                                 {
-                                    positive
-                                        ? "Te deben"
+                                    miBalance > 0
+                                        ? "Recibes"
                                         : "Debes"
                                 }
+
                             </Text>
 
                         </>
@@ -197,5 +200,17 @@ const styles = StyleSheet.create({
         textAlign: "right",
         maxWidth: 100,
         lineHeight: 18,
+    },
+
+    balanceText: {
+        fontSize: 13,
+        fontWeight: "700",
+        marginTop: 6,
+    },
+
+    balanceNeutral: {
+        fontSize: 13,
+        color: COLORS.subtitle,
+        marginTop: 6,
     },
 });

@@ -1,5 +1,8 @@
 import { Alert } from "react-native";
-
+import {
+    getExpenseById,
+    updateExpense,
+} from "@/src/services/expenseService";
 import { createExpense }
     from "@/src/services/expenseService";
 import {
@@ -9,6 +12,7 @@ import {
     TextInput,
     TouchableOpacity,
     ScrollView,
+
 } from "react-native";
 
 import { useState, useEffect } from "react";
@@ -26,7 +30,65 @@ import {
 
 export default function CreateExpenseScreen() {
 
-    const { id } = useLocalSearchParams();
+    const {
+        id,
+        expenseId,
+    } = useLocalSearchParams();
+    const editing =
+        !!expenseId;
+
+
+    const loadExpense = async () => {
+
+        try {
+
+            const data =
+                await getExpenseById(
+                    Number(expenseId)
+                );
+
+            setDescription(
+                data.descripcion
+            );
+
+            setAmount(
+                String(data.montoTotal)
+            );
+
+            setSplitType(
+                data.tipoDivision
+            );
+
+            setPaidBy(
+                data.pagadoPorId
+            );
+
+            setSelectedUsers(
+
+                data.participantes.map(
+                    (p: any) => p.usuarioId
+                )
+            );
+
+            const amounts: any = {};
+
+            data.participantes.forEach(
+                (p: any) => {
+
+                    amounts[p.usuarioId] =
+                        String(p.monto);
+                }
+            );
+
+            setCustomAmounts(
+                amounts
+            );
+
+        } catch (error) {
+
+            console.log(error);
+        }
+    };
 
     const [description, setDescription] =
         useState("");
@@ -52,6 +114,21 @@ export default function CreateExpenseScreen() {
     useEffect(() => {
 
         loadUsers();
+
+    }, []);
+    useEffect(() => {
+
+        if (splitType === "IGUAL") {
+
+            setCustomAmounts({});
+        }
+
+    }, [splitType]);
+    useEffect(() => {
+
+        if (!editing) return;
+
+        loadExpense();
 
     }, []);
 
@@ -132,7 +209,10 @@ export default function CreateExpenseScreen() {
                 return;
             }
 
-            if (selectedUsers.length === 0) {
+            if (
+                splitType === "IGUAL"
+                && selectedUsers.length === 0
+            ) {
 
                 Alert.alert(
                     "Error",
@@ -144,11 +224,19 @@ export default function CreateExpenseScreen() {
 
             let participantes = [];
 
+            // =========================
+            // DIVISIÓN IGUALITARIA
+            // =========================
+
             if (splitType === "IGUAL") {
 
                 const splitAmount =
-                    Number(amount)
-                    / selectedUsers.length;
+                    Number(
+                        (
+                            Number(amount)
+                            / selectedUsers.length
+                        ).toFixed(2)
+                    );
 
                 participantes =
                     selectedUsers.map(
@@ -159,24 +247,62 @@ export default function CreateExpenseScreen() {
                             monto: Number(
                                 splitAmount.toFixed(2)
                             ),
-
                         })
                     );
 
-            } else {
+            }
+
+                // =========================
+                // DIVISIÓN PERSONALIZADA
+            // =========================
+
+            else {
 
                 participantes =
-                    selectedUsers.map(
-                        (userId) => ({
+                    users
+                        .filter(user =>
 
-                            usuarioId: userId,
+                            Number(
+                                customAmounts[user.id]
+                            ) > 0
+                        )
+                        .map(user => ({
+
+                            usuarioId: user.id,
 
                             monto: Number(
-                                customAmounts[userId]
+                                customAmounts[user.id]
                             ),
+                        }));
 
-                        })
+                if (participantes.length === 0) {
+
+                    Alert.alert(
+                        "Error",
+                        "Ingresa al menos un participante"
                     );
+
+                    return;
+                }
+
+                const payerIncluded =
+                    participantes.some(
+
+                        p =>
+                            p.usuarioId === paidBy
+                    );
+
+                if (!payerIncluded) {
+
+                    Alert.alert(
+
+                        "Error",
+
+                        "La persona que pagó debe participar en el gasto"
+                    );
+
+                    return;
+                }
 
                 const total =
                     participantes.reduce(
@@ -193,7 +319,7 @@ export default function CreateExpenseScreen() {
 
                     Alert.alert(
                         "Error",
-                        "La suma no coincide"
+                        "La suma no coincide con el monto total"
                     );
 
                     return;
@@ -203,7 +329,9 @@ export default function CreateExpenseScreen() {
             const payload = {
 
                 grupoId: Number(id),
+
                 pagadoPorId: paidBy,
+
                 descripcion: description,
 
                 monto: Number(amount),
@@ -220,11 +348,25 @@ export default function CreateExpenseScreen() {
                 ],
             };
 
-            await createExpense(payload);
+            if (editing) {
+
+                await updateExpense(
+                    Number(expenseId),
+                    payload
+                );
+
+            } else {
+
+                await createExpense(
+                    payload
+                );
+            }
 
             Alert.alert(
                 "Éxito",
-                "Gasto registrado"
+                editing
+                    ? "Gasto actualizado"
+                    : "Gasto registrado"
             );
 
             router.back();
@@ -250,7 +392,11 @@ export default function CreateExpenseScreen() {
         >
 
             <Text style={styles.title}>
-                Nuevo gasto
+                {
+                    editing
+                        ? "Editar gasto"
+                        : "Nuevo gasto"
+                }
             </Text>
 
             <View style={styles.card}>
@@ -401,6 +547,7 @@ export default function CreateExpenseScreen() {
 
                         <Text style={styles.helperText}>
                             Ingresa cuánto debe cada participante.
+                            Deja vacío o 0 para excluirlo.
                         </Text>
 
                     )
@@ -418,9 +565,13 @@ export default function CreateExpenseScreen() {
                             <TouchableOpacity
                                 key={user.id}
                                 style={styles.userRow}
-                                onPress={() =>
-                                    toggleUser(user.id)
-                                }
+                                onPress={() => {
+
+                                    if (splitType === "IGUAL") {
+
+                                        toggleUser(user.id);
+                                    }
+                                }}
                             >
 
                                 <View style={styles.left}>
@@ -518,7 +669,11 @@ export default function CreateExpenseScreen() {
             >
 
                 <Text style={styles.saveText}>
-                    Guardar gasto
+                    {
+                        editing
+                            ? "Actualizar gasto"
+                            : "Guardar gasto"
+                    }
                 </Text>
 
             </TouchableOpacity>

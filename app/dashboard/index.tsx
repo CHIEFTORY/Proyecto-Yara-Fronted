@@ -7,7 +7,7 @@ import ExpenseChart from "@/components/dashboard/ExpenseChart";
 import {
     useFocusEffect,
 } from "@react-navigation/native";
-import { getMyGroups } from "@/src/services/groupService";
+import { getMyGroups,getDashboardBalance } from "@/src/services/groupService";
 
 import { router } from "expo-router";
 import React,
@@ -36,7 +36,8 @@ export default function DashboardScreen() {
 
     const [groups, setGroups] =
         useState<any[]>([]);
-
+    const [balance, setBalance] =
+        useState<any>(null);
     useFocusEffect(
 
         React.useCallback(() => {
@@ -66,6 +67,11 @@ export default function DashboardScreen() {
 
             setGroups(groupsData);
 
+            const balanceData =
+                await getDashboardBalance();
+
+            setBalance(balanceData);
+
         } catch (error) {
 
             console.log(error);
@@ -87,7 +93,17 @@ export default function DashboardScreen() {
                     name={user?.nombre || "Usuario"}
                 />
 
-                <BalanceCard />
+                <BalanceCard
+                    balanceGeneral={
+                        balance?.balanceGeneral || 0
+                    }
+                    totalDebes={
+                        balance?.totalDebes || 0
+                    }
+                    totalTeDeben={
+                        balance?.totalTeDeben || 0
+                    }
+                />
 
                 <ExpenseChart />
 
@@ -108,6 +124,17 @@ export default function DashboardScreen() {
                             onPress={() => {
                                 router.push(
                                     "/groups/create" as any
+                                );
+                            }}
+                        />
+                        <QuickAction
+                            title="Métodos pago"
+                            icon="💳"
+                            color="#2563EB"
+                            background="#DBEAFE"
+                            onPress={() => {
+                                router.push(
+                                    "/payment-methods" as any
                                 );
                             }}
                         />
@@ -145,7 +172,7 @@ export default function DashboardScreen() {
                                     key={group.id}
                                     name={group.nombre}
                                     lastActivity={`${group.cantidadMiembros} miembros`}
-                                    amount=""
+                                    miBalance={group.miBalance}
                                     color="#3B82F6"
                                     onPress={() => {
                                         router.push(
@@ -218,7 +245,6 @@ const styles = StyleSheet.create({
 
     quickActionsGrid: {
         flexDirection: "row",
-        justifyContent: "space-between",
         gap: 12,
     },
 
@@ -269,5 +295,33 @@ const styles = StyleSheet.create({
         color: COLORS.subtitle,
         textAlign: "center",
         lineHeight: 22,
+    },
+    paymentButton: {
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 18,
+
+        marginHorizontal: 20,
+        marginBottom: 20,
+
+        flexDirection: "row",
+        alignItems: "center",
+
+        shadowColor: "#000",
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+
+        elevation: 2,
+    },
+
+    paymentEmoji: {
+        fontSize: 22,
+        marginRight: 12,
+    },
+
+    paymentText: {
+        fontSize: 16,
+        fontWeight: "700",
+        color: COLORS.text,
     },
 });

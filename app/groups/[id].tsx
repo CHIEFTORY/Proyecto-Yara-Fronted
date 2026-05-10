@@ -1,4 +1,17 @@
 import {
+    formatTimeAgo,
+} from "@/src/utils/time";
+import {
+    getGroupPayments,
+} from "@/src/services/paymentDebtService";
+import {
+    getMeRequest,
+} from "@/src/services/authService";
+import {
+    getGroupExpenses,
+    deleteExpense,
+} from "@/src/services/expenseService";
+import {
     View,
     Text,
     StyleSheet,
@@ -36,6 +49,8 @@ export default function GroupDetailScreen() {
 
     const [users, setUsers] =
         useState<any[]>([]);
+    const [currentUser, setCurrentUser] =
+        useState<any>(null);
 
     const [loading, setLoading] =
         useState(true);
@@ -50,6 +65,12 @@ export default function GroupDetailScreen() {
 
         }, [])
     );
+    const [expenses, setExpenses] =
+        useState<any[]>([]);
+
+    const [payments, setPayments] =
+        useState<any[]>([]);
+
     const openGroupMenu = () => {
 
         Alert.alert(
@@ -99,6 +120,47 @@ export default function GroupDetailScreen() {
         );
     };
 
+    const handleDeleteExpense = (
+        expenseId: number
+    ) => {
+
+        Alert.alert(
+
+            "Eliminar gasto",
+
+            "¿Seguro que deseas eliminar este gasto?",
+
+            [
+
+                {
+                    text: "Cancelar",
+                    style: "cancel",
+                },
+
+                {
+                    text: "Eliminar",
+
+                    onPress: async () => {
+
+                        try {
+
+                            await deleteExpense(
+                                expenseId
+                            );
+
+                            loadGroup();
+
+                        } catch (error) {
+
+                            console.log(error);
+                        }
+                    }
+                }
+
+            ]
+        );
+    };
+
     const loadGroup = async () => {
 
         try {
@@ -113,9 +175,25 @@ export default function GroupDetailScreen() {
                     Number(id)
                 );
 
+            const expensesData =
+                await getGroupExpenses(
+                    Number(id)
+                );
+            const paymentsData =
+                await getGroupPayments(
+                    Number(id)
+                );
+            const me =
+                await getMeRequest();
+
+            setCurrentUser(me);
             setSummary(summaryData);
 
             setUsers(usersData);
+
+            setExpenses(expensesData);
+
+            setPayments(paymentsData);
 
         } catch (error) {
 
@@ -278,6 +356,34 @@ export default function GroupDetailScreen() {
                         Gastos
                     </Text>
 
+
+
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[
+                        styles.tabButton,
+                        activeTab === "pagos"
+                            ? styles.activeTab
+                            : null,
+                    ]}
+                    onPress={() =>
+                        setActiveTab("pagos")
+                    }
+                >
+
+                    <Text
+                        style={[
+                            styles.tabText,
+                            activeTab === "pagos"
+                                ? styles.activeTabText
+                                : null,
+                        ]}
+                    >
+                        Pagos
+                    </Text>
+
+
                 </TouchableOpacity>
 
             </View>
@@ -439,10 +545,12 @@ export default function GroupDetailScreen() {
                                     summary?.deudas?.map(
                                         (deuda: any, index: number) => (
 
-                                            <View
-                                                key={index}
-                                                style={styles.debtCard}
-                                            >
+
+
+                                                <View
+                                                    key={index}
+                                                    style={styles.debtCard}
+                                                >
 
                                                 <Text style={styles.debtDescription}>
 
@@ -464,6 +572,29 @@ export default function GroupDetailScreen() {
 
                                                 </Text>
 
+                                                {
+                                                    currentUser?.nombre ===
+                                                    deuda.deudor && (
+
+                                                        <TouchableOpacity
+                                                            style={styles.payButton}
+                                                            onPress={() => {
+                                                                router.push(
+                                                                    `/groups/${id}/pay-debt?deudorId=${deuda.deudorId}&acreedorId=${deuda.acreedorId}&monto=${deuda.monto}` as any
+                                                                );
+
+                                                            }}
+                                                        >
+
+                                                            <Text style={styles.payButtonText}>
+                                                                Pagar
+                                                            </Text>
+
+                                                        </TouchableOpacity>
+
+                                                    )
+                                                }
+
                                             </View>
 
                                         )
@@ -475,6 +606,199 @@ export default function GroupDetailScreen() {
                         </View>
 
                     </>
+
+
+                )
+
+            }
+            {
+                activeTab === "gastos" && (
+
+                    <View style={styles.listContainer}>
+
+                        {
+                            expenses.length === 0 ? (
+
+                                <Text style={styles.noDebtText}>
+                                    No hay gastos registrados
+                                </Text>
+
+                            ) : (
+
+                                expenses.map((expense) => (
+
+                                    <View
+                                        key={expense.id}
+                                        style={styles.expenseCard}
+                                    >
+
+                                        <View style={styles.expenseLeft}>
+
+                                            <View style={styles.expenseIcon}>
+
+                                                <Text style={styles.expenseEmoji}>
+                                                    💸
+                                                </Text>
+
+                                            </View>
+
+                                            <View>
+
+                                                <Text style={styles.expenseTitle}>
+                                                    {expense.descripcion}
+                                                </Text>
+
+                                                <Text style={styles.expenseSubtitle}>
+                                                    Pagó {expense.pagadoPor}
+                                                </Text>
+                                                <Text style={styles.expenseSubtitle}>
+                                                    {formatTimeAgo(expense.fecha)}
+                                                </Text>
+
+                                            </View>
+
+                                        </View>
+
+                                        <View style={styles.expenseRight}>
+
+                                            <TouchableOpacity
+                                                onPress={() => {
+
+                                                    Alert.alert(
+
+                                                        "Opciones",
+
+                                                        "",
+
+                                                        [
+
+                                                            {
+                                                                text: "Cancelar",
+                                                                style: "cancel",
+                                                            },
+
+                                                            {
+                                                                text: "Editar",
+
+                                                                onPress: () => {
+
+                                                                    router.push({
+
+                                                                        pathname:
+                                                                            "/groups/[id]/create-expense",
+
+                                                                        params: {
+                                                                            id: String(id),
+                                                                            expenseId: String(expense.id),
+                                                                        }
+                                                                    });
+                                                                }
+                                                            },
+
+                                                            {
+                                                                text: "Eliminar",
+
+                                                                onPress: () =>
+                                                                    handleDeleteExpense(
+                                                                        expense.id
+                                                                    )
+                                                            }
+                                                        ]
+                                                    );
+                                                }}
+                                            >
+
+                                                <Text style={styles.expenseMenu}>
+                                                    ⋮
+                                                </Text>
+
+                                            </TouchableOpacity>
+
+                                            <Text style={styles.expenseAmount}>
+                                                S/ {expense.montoTotal}
+                                            </Text>
+
+                                        </View>
+
+                                    </View>
+
+                                ))
+
+                            )
+                        }
+
+                    </View>
+
+                )
+            }
+            {
+                activeTab === "pagos" && (
+
+                    <View style={styles.listContainer}>
+
+                        {
+                            payments.length === 0 ? (
+
+                                <Text style={styles.noDebtText}>
+                                    No hay pagos registrados
+                                </Text>
+
+                            ) : (
+
+                                payments.map((payment) => (
+
+                                    <View
+                                        key={payment.id}
+                                        style={styles.expenseCard}
+                                    >
+
+                                        <View style={styles.expenseLeft}>
+
+                                            <View style={styles.expenseIcon}>
+
+                                                <Text style={styles.expenseEmoji}>
+                                                    💳
+                                                </Text>
+
+                                            </View>
+
+                                            <View>
+
+                                                <Text style={styles.expenseTitle}>
+                                                    {payment.deudor}
+                                                </Text>
+
+                                                <Text style={styles.expenseSubtitle}>
+                                                    Pagó a {payment.acreedor}
+                                                </Text>
+
+                                                <Text style={styles.expenseSubtitle}>
+                                                    {payment.metodoPago}
+                                                </Text>
+                                                <Text style={styles.expenseSubtitle}>
+                                                    {formatTimeAgo(payment.fecha)}
+                                                </Text>
+
+                                            </View>
+
+                                        </View>
+
+                                        <View style={styles.expenseRight}>
+
+                                            <Text style={styles.expenseAmount}>
+                                                S/ {payment.monto}
+                                            </Text>
+
+                                        </View>
+
+                                    </View>
+
+                                ))
+
+                            )
+                        }
+
+                    </View>
 
                 )
             }
@@ -756,5 +1080,86 @@ const styles = StyleSheet.create({
 
     settingsIcon: {
         fontSize: 20,
+    },
+
+    expenseCard: {
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 18,
+        marginBottom: 14,
+
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+
+        shadowColor: "#000",
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+
+        elevation: 2,
+    },
+
+    expenseLeft: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+
+    expenseIcon: {
+        width: 50,
+        height: 50,
+        borderRadius: 16,
+
+        backgroundColor: "#EEF2FF",
+
+        justifyContent: "center",
+        alignItems: "center",
+
+        marginRight: 14,
+    },
+
+    expenseEmoji: {
+        fontSize: 22,
+    },
+
+    expenseTitle: {
+        fontSize: 16,
+        fontWeight: "700",
+        color: COLORS.text,
+    },
+
+    expenseSubtitle: {
+        marginTop: 4,
+        color: COLORS.subtitle,
+        fontSize: 13,
+    },
+
+    expenseRight: {
+        alignItems: "flex-end",
+    },
+
+    expenseAmount: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: COLORS.text,
+    },
+
+    expenseMenu: {
+        fontSize: 22,
+        marginBottom: 8,
+        color: COLORS.subtitle,
+        textAlign: "right",
+    },
+    payButton: {
+        backgroundColor: COLORS.primary,
+        paddingHorizontal: 18,
+        paddingVertical: 10,
+        borderRadius: 14,
+        marginTop: 14,
+        alignSelf: "flex-start",
+    },
+
+    payButtonText: {
+        color: "white",
+        fontWeight: "700",
     },
 });

@@ -71,3 +71,14 @@ export const deleteGroup = async (
 
     return response.data;
 };
+
+export const getDashboardBalance =
+    async () => {
+
+        const response =
+            await api.get(
+                "/grupos/dashboard-balance"
+            );
+
+        return response.data;
+    };

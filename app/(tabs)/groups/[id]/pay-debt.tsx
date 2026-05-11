@@ -154,67 +154,110 @@ export default function PayDebtPage() {
 
             </View>
 
+            <View style={styles.infoBox}>
+
+                <Text style={styles.infoText}>
+                    El pago será registrado y notificado
+                    al destinatario automáticamente.
+                </Text>
+
+            </View>
+
             <Text style={styles.sectionTitle}>
                 Método de pago
             </Text>
 
             <FlatList
                 data={methods}
+
                 keyExtractor={(item) =>
                     item.id.toString()
                 }
+
                 renderItem={({ item }) => (
 
                     <TouchableOpacity
                         style={[
+
                             styles.methodCard,
 
                             selectedMethod?.id === item.id
                                 ? styles.selectedCard
                                 : null,
                         ]}
+
                         onPress={() =>
                             setSelectedMethod(item)
                         }
                     >
 
-                        <Text style={styles.methodBrand}>
-                            {item.cardBrand}
-                        </Text>
+                        <View>
 
-                        <Text style={styles.methodLast4}>
-                            **** {item.cardLast4}
-                        </Text>
+                            <Text style={styles.methodBrand}>
+                                {item.cardBrand}
+                            </Text>
+
+                            <Text style={styles.methodLast4}>
+                                **** {item.cardLast4}
+                            </Text>
+
+                        </View>
+
+                        {
+                            selectedMethod?.id === item.id && (
+
+                                <Text style={styles.check}>
+                                    ✓
+                                </Text>
+                            )
+                        }
 
                     </TouchableOpacity>
 
                 )}
             />
 
-            <TouchableOpacity
-                style={[
+            <View style={styles.buttonsContainer}>
 
-                    styles.payButton,
+                <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => router.back()}
+                >
 
-                    loading
-                        ? styles.payButtonDisabled
-                        : null,
-                ]}
-                onPress={handlePay}
-                disabled={loading}
-            >
+                    <Text style={styles.cancelButtonText}>
+                        Cancelar
+                    </Text>
 
-                <Text style={styles.payButtonText}>
+                </TouchableOpacity>
 
-                    {
+                <TouchableOpacity
+                    style={[
+
+                        styles.payButton,
+
                         loading
-                            ? "Procesando..."
-                            : "Pagar ahora"
-                    }
+                            ? styles.payButtonDisabled
+                            : null,
+                    ]}
 
-                </Text>
+                    onPress={handlePay}
 
-            </TouchableOpacity>
+                    disabled={loading}
+                >
+
+                    <Text style={styles.payButtonText}>
+
+                        {
+                            loading
+                                ? "Procesando..."
+                                : "Pagar ahora"
+                        }
+
+                    </Text>
+
+                </TouchableOpacity>
+
+            </View>
 
         </View>
     );
@@ -263,13 +306,24 @@ const styles = StyleSheet.create({
     },
 
     methodCard: {
+
         backgroundColor: "white",
+
         borderRadius: 20,
+
         padding: 20,
+
         marginBottom: 14,
 
         borderWidth: 2,
+
         borderColor: "transparent",
+
+        flexDirection: "row",
+
+        justifyContent: "space-between",
+
+        alignItems: "center",
     },
 
     selectedCard: {
@@ -288,11 +342,16 @@ const styles = StyleSheet.create({
     },
 
     payButton: {
+
         backgroundColor: COLORS.primary,
+
         paddingVertical: 18,
+
         borderRadius: 20,
+
         alignItems: "center",
-        marginTop: 20,
+
+        justifyContent: "center",
     },
 
     payButtonText: {
@@ -304,5 +363,69 @@ const styles = StyleSheet.create({
     payButtonDisabled: {
 
         opacity: 0.6,
+    },
+
+    infoBox: {
+
+        backgroundColor: "#EFF6FF",
+
+        borderRadius: 18,
+
+        padding: 16,
+
+        marginBottom: 28,
+
+        borderWidth: 1,
+
+        borderColor: "#BFDBFE",
+    },
+
+    infoText: {
+
+        color: "#1E40AF",
+
+        fontSize: 14,
+
+        lineHeight: 22,
+
+        fontWeight: "500",
+    },
+
+    buttonsContainer: {
+
+        marginTop: 24,
+    },
+
+    cancelButton: {
+
+        backgroundColor: "#E5E7EB",
+
+        marginBottom: 14,
+
+        paddingVertical: 18,
+
+        borderRadius: 20,
+
+        alignItems: "center",
+
+        justifyContent: "center",
+    },
+
+    cancelButtonText: {
+
+        color: COLORS.text,
+
+        fontWeight: "700",
+
+        fontSize: 16,
+    },
+
+    check: {
+
+        fontSize: 20,
+
+        fontWeight: "bold",
+
+        color: COLORS.primary,
     },
 });

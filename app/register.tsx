@@ -113,13 +113,24 @@ export default function RegisterScreen() {
                 ]
             );
 
-        } catch (error) {
+        } catch (error: any) {
 
-            setErrorMessage(
-                "No se pudo registrar el usuario"
+            console.log(
+                JSON.stringify(
+                    error.response.data,
+                    null,
+                    2
+                )
             );
 
-        } finally {
+            setErrorMessage(
+
+                error?.response?.data?.mensaje
+                ||
+
+                "No se pudo registrar el usuario"
+            );
+        }finally {
 
             setLoading(false);
         }

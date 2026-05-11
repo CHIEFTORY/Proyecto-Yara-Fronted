@@ -99,7 +99,7 @@ export default function GroupsScreen() {
                 key={index}
         style={styles.groupCard}
         onPress={() =>
-        router.push(`/group/${group.id}` as any)
+        router.push(`/groups/${group.id}` as any)
     }
     >
 

@@ -62,7 +62,7 @@ export default function CulqiCheckoutScreen() {
 
                 currency: 'PEN',
 
-                amount: 1000,
+                amount: 10,
             });
 
             Culqi.options({

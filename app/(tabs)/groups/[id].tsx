@@ -47,10 +47,21 @@ export default function GroupDetailScreen() {
     const [summary, setSummary] =
         useState<any>(null);
 
+
+
     const [users, setUsers] =
         useState<any[]>([]);
     const [currentUser, setCurrentUser] =
         useState<any>(null);
+    const soyAdmin =
+
+        users.some(
+            u =>
+
+                u.email === currentUser?.email &&
+
+                u.rol?.toUpperCase() === "ADMIN"
+        );
 
     const [loading, setLoading] =
         useState(true);
@@ -73,50 +84,58 @@ export default function GroupDetailScreen() {
 
     const openGroupMenu = () => {
 
+        const opciones: any[] = [
+
+            {
+                text: "Cancelar",
+                style: "cancel",
+            },
+
+            {
+                text: "Salir del grupo",
+
+                onPress: () => {
+
+                    console.log(
+                        "Salir grupo"
+                    );
+                }
+            }
+        ];
+
+        if (soyAdmin) {
+
+            opciones.push({
+
+                text: "Eliminar grupo",
+
+                style: "destructive",
+
+                onPress: async () => {
+
+                    try {
+
+                        await deleteGroup(
+                            Number(id)
+                        );
+
+                        router.replace("/groups" as any);
+
+                    } catch (error) {
+
+                        console.log(error);
+                    }
+                }
+            });
+        }
+
         Alert.alert(
 
             "Opciones del grupo",
 
             "Selecciona una opción",
 
-            [
-                {
-                    text: "Cancelar",
-                    style: "cancel",
-                },
-
-
-
-                {
-                    text: "Salir del grupo",
-                    onPress: () => {
-
-                        console.log(
-                            "Salir grupo"
-                        );
-                    }
-                },
-
-                {
-                    text: "Eliminar grupo",
-
-                    onPress: async () => {
-
-                        try {
-
-                            await deleteGroup(
-                                Number(id)
-                            );
-
-                            router.replace("/");
-
-                        } catch (error) {
-
-                            console.log(error);
-                        }
-                    }
-                }
-            ]
+            opciones
         );
     };
 
@@ -441,7 +460,7 @@ export default function GroupDetailScreen() {
                                                     </Text>
 
                                                     {
-                                                        user.rol === "ADMIN" && (
+                                                        user.rol === "ADMIN"&& (
 
                                                             <View style={styles.adminBadge}>
 

@@ -68,7 +68,7 @@ export default function LoginScreen() {
                 response.token
             );
 
-            router.replace("/dashboard");
+            router.replace("/(tabs)");
 
         } catch (error: any) {
 

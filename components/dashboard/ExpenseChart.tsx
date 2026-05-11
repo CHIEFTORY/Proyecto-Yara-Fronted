@@ -5,13 +5,56 @@ import {
     Dimensions,
 } from "react-native";
 
-import { BarChart } from "react-native-chart-kit";
+import {
+    useEffect,
+    useState,
+} from "react";
 
-import { COLORS } from "@/src/styles/colors";
+import {
+    BarChart,
+} from "react-native-chart-kit";
 
-const screenWidth = Dimensions.get("window").width;
+import {
+    COLORS,
+} from "@/src/styles/colors";
+
+import {
+    getExpenseChart,
+} from "@/src/services/expenseService";
+
+const screenWidth =
+    Dimensions.get("window").width;
 
 export default function ExpenseChart() {
+
+    const [chartData, setChartData] =
+        useState<
+            {
+                mes: string;
+                total: number;
+            }[]
+        >([]);
+
+    useEffect(() => {
+
+        loadChart();
+
+    }, []);
+
+    const loadChart = async () => {
+
+        try {
+
+            const data =
+                await getExpenseChart();
+
+            setChartData(data);
+
+        } catch (error) {
+
+            console.log(error);
+        }
+    };
 
     return (
 
@@ -23,29 +66,48 @@ export default function ExpenseChart() {
 
             <BarChart
                 data={{
-                    labels: ["Ene", "Feb", "Mar", "Abr", "May"],
+                    labels:
+                        chartData.map(
+                            item => item.mes
+                        ),
+
                     datasets: [
                         {
-                            data: [450, 680, 520, 910, 720],
+                            data:
+                                chartData.map(
+                                    item =>
+                                        item.total || 0
+                                ),
                         }
                     ],
                 }}
+
                 width={screenWidth - 80}
+
                 height={240}
-                yAxisLabel=""
+
+                yAxisLabel="S/ "
+
                 yAxisSuffix=""
+
                 fromZero
+
                 showValuesOnTopOfBars={false}
+
                 chartConfig={{
-                    backgroundGradientFrom: COLORS.white,
-                    backgroundGradientTo: COLORS.white,
+                    backgroundGradientFrom:
+                    COLORS.white,
+
+                    backgroundGradientTo:
+                    COLORS.white,
 
                     decimalPlaces: 0,
 
                     color: (opacity = 1) =>
                         `rgba(37, 99, 235, ${opacity})`,
 
-                    labelColor: () => COLORS.subtitle,
+                    labelColor: () =>
+                        COLORS.subtitle,
 
                     barPercentage: 0.7,
 
@@ -53,6 +115,7 @@ export default function ExpenseChart() {
                         stroke: "#E5E7EB",
                     },
                 }}
+
                 style={styles.chart}
             />
 
@@ -64,12 +127,17 @@ const styles = StyleSheet.create({
 
     card: {
         backgroundColor: COLORS.white,
+
         borderRadius: 24,
+
         padding: 22,
+
         marginBottom: 24,
 
         shadowColor: "#000",
+
         shadowOpacity: 0.04,
+
         shadowRadius: 8,
 
         elevation: 2,
@@ -77,8 +145,11 @@ const styles = StyleSheet.create({
 
     title: {
         fontSize: 22,
+
         fontWeight: "bold",
+
         color: COLORS.text,
+
         marginBottom: 20,
     },
 

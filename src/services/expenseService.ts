@@ -61,3 +61,14 @@ export const updateExpense = async (
 
     return response.data;
 };
+
+export const getExpenseChart =
+    async () => {
+
+        const response =
+            await api.get(
+                "/gastos/chart"
+            );
+
+        return response.data;
+    };

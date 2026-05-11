@@ -20,12 +20,7 @@ type Props = {
 export default function Header({
                                    name
                                }: Props) {
-    const handleLogout = async () => {
 
-        await removeToken();
-
-        router.replace("/");
-    };
     const firstName = name.split(" ")[0];
     const initials = name
         ?.split(" ")
@@ -52,7 +47,9 @@ export default function Header({
 
             <TouchableOpacity
                 style={styles.avatar}
-                onPress={handleLogout}
+                onPress={() => {
+                    router.push("/profile");
+                }}
             >
 
                 <Text style={styles.avatarText}>

@@ -161,7 +161,12 @@ export default function LoginScreen() {
                         <View style={styles.fieldGroup}>
                             <View style={styles.labelRow}>
                                 <Text style={styles.label}>Contraseña</Text>
-                                <TouchableOpacity onPress={() => {}}>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        const query = email ? `?email=${encodeURIComponent(email)}` : "";
+                                        router.push(`/forgot-password${query}` as any);
+                                    }}
+                                >
                                     <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
                                 </TouchableOpacity>
                             </View>

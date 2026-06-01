@@ -46,3 +46,35 @@ export const registerRequest = async (
 
     return response.data;
 };
+
+export const requestPasswordReset = async (
+    email: string
+) => {
+
+    const response = await api.post(
+        "/auth/password-reset/request",
+        {
+            email,
+        }
+    );
+
+    return response.data;
+};
+
+export const confirmPasswordReset = async (
+    email: string,
+    otp: string,
+    nuevaPassword: string
+) => {
+
+    const response = await api.post(
+        "/auth/password-reset/confirm",
+        {
+            email,
+            otp,
+            nuevaPassword,
+        }
+    );
+
+    return response.data;
+};

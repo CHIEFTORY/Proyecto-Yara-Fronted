@@ -75,6 +75,44 @@ const getConfig = (type: string) => {
     return NOTIFICATION_CONFIG[normalized] ?? NOTIFICATION_CONFIG.DEFAULT;
 };
 
+const getNotificationAction = (notification: NotificationItem) => {
+    const normalized = notification.tipo?.trim().toUpperCase();
+
+    if (normalized === "PAGO_PENDIENTE") {
+        return {
+            label: "Validar pago",
+            icon: "checkmark-done-outline" as const,
+            route: "/payment/confirmations?returnTo=activity",
+        };
+    }
+
+    if (normalized === "PAGO_RECHAZADO") {
+        return {
+            label: "Pagar deuda",
+            icon: "card-outline" as const,
+            route: "/payment?returnTo=activity",
+        };
+    }
+
+    if (normalized === "PAGO_CONFIRMADO" || normalized === "PAGO") {
+        return {
+            label: "Ver pagos",
+            icon: "receipt-outline" as const,
+            route: "/payment/history?returnTo=activity",
+        };
+    }
+
+    if (normalized !== "INVITACION" && notification.grupoId) {
+        return {
+            label: "Ir al grupo",
+            icon: "arrow-forward" as const,
+            route: `/groups/${notification.grupoId}`,
+        };
+    }
+
+    return null;
+};
+
 export default function ActivityPage() {
 
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -384,7 +422,7 @@ export default function ActivityPage() {
                     const config = getConfig(notification.tipo);
                     const isUnread = !notification.leido;
                     const isMarking = markingIds.includes(notification.id);
-                    const normalizedType = notification.tipo?.trim().toUpperCase();
+                    const action = getNotificationAction(notification);
 
                     return (
                         <TouchableOpacity
@@ -437,14 +475,14 @@ export default function ActivityPage() {
                                         <Text style={styles.markingHintText}>Marcando...</Text>
                                     </View>
                                 )}
-                                {normalizedType !== "INVITACION" && notification.grupoId && (
+                                {action && (
                                     <TouchableOpacity
                                         style={styles.goToGroupButton}
-                                        onPress={() => router.push(`/groups/${notification.grupoId}` as any)}
+                                        onPress={() => router.push(action.route as any)}
                                         activeOpacity={0.82}
                                     >
-                                        <Text style={styles.goToGroupText}>Ir al grupo</Text>
-                                        <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+                                        <Text style={styles.goToGroupText}>{action.label}</Text>
+                                        <Ionicons name={action.icon} size={13} color="#FFFFFF" />
                                     </TouchableOpacity>
                                 )}
                             </View>

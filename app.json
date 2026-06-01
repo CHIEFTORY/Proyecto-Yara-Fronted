@@ -7,6 +7,12 @@
     "icon": "./assets/images/yara_app_icon_blue.png",
     "scheme": "yara",
     "userInterfaceStyle": "automatic",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7f97f53c-3c6f-439a-99c3-f4aabfa07b98"
+    },
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true

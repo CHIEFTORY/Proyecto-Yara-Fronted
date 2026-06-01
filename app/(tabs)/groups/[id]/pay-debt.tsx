@@ -1,4 +1,5 @@
 import * as Clipboard from "expo-clipboard";
+import * as IntentLauncher from "expo-intent-launcher";
 
 import {
     View,
@@ -55,7 +56,7 @@ export default function PayDebtPage() {
     const [selectedMethod, setSelectedMethod] = useState<any>(null);
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const amountValue = Number.isFinite(debtData.monto) ? debtData.monto : 0;
-    const availableMethods =
+    const rawAvailableMethods =
         debtData.metodosCobro.length > 0
             ? debtData.metodosCobro
             : debtData.yapeNumero && debtData.yapeNumero !== "null"
@@ -66,6 +67,7 @@ export default function PayDebtPage() {
                     predeterminado: true,
                 }]
                 : [];
+    const availableMethods = normalizeReceiverMethods(rawAvailableMethods);
     const activeMethod =
         selectedMethod
         || availableMethods.find((method: any) => method.predeterminado)
@@ -73,6 +75,7 @@ export default function PayDebtPage() {
     const methodLabel = getMethodLabel(activeMethod);
     const methodTheme = getMethodTheme(activeMethod, !debtLoaded && availableMethods.length === 0);
     const copyValue = getMethodCopyValue(activeMethod);
+    const hasPaymentDestination = Boolean(activeMethod && copyValue);
 
     useEffect(() => {
         const current = {
@@ -136,6 +139,34 @@ export default function PayDebtPage() {
         setTimeout(() => setCopied(false), 2500);
     };
 
+    const handleCopyAndOpenApp = async () => {
+        await handleCopyNumber();
+
+        const appInfo = getExternalPaymentApp(activeMethod);
+
+        if (!appInfo) {
+            return;
+        }
+
+        if (Platform.OS !== "android") {
+            Alert.alert(
+                "Numero copiado",
+                `Abre ${appInfo.label} manualmente y pega el numero copiado.`
+            );
+            return;
+        }
+
+        try {
+            IntentLauncher.openApplication(appInfo.packageName);
+        } catch (error) {
+            console.log(error);
+            Alert.alert(
+                "Numero copiado",
+                `No pudimos abrir ${appInfo.label} automaticamente. Abre la app manualmente y pega el numero copiado.`
+            );
+        }
+    };
+
     const pressIn = () => {
         Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true, speed: 30 }).start();
     };
@@ -152,6 +183,14 @@ export default function PayDebtPage() {
                 : `/groups/${id}`;
 
     const submitPayment = async () => {
+        if (!hasPaymentDestination) {
+            Alert.alert(
+                "Metodo no disponible",
+                "El destinatario todavia no tiene un metodo de cobro configurado."
+            );
+            return;
+        }
+
         try {
             setLoading(true);
             await createPayment({
@@ -178,6 +217,14 @@ export default function PayDebtPage() {
 
     const handlePay = async () => {
         if (loading) return;
+
+        if (!hasPaymentDestination) {
+            Alert.alert(
+                "Metodo no disponible",
+                "Pidele al destinatario que configure Yape, Plin o una cuenta bancaria antes de registrar el pago."
+            );
+            return;
+        }
 
         if (Platform.OS === "web") {
             await submitPayment();
@@ -240,33 +287,72 @@ export default function PayDebtPage() {
                 ]}>
                     <Ionicons name="information-circle-outline" size={18} color={methodTheme.infoText} style={styles.infoBannerIcon} />
                     <Text style={styles.infoBannerText}>
-                        El pago será registrado y notificado al destinatario automáticamente.
+                        {hasPaymentDestination
+                            ? "El pago sera registrado y notificado al destinatario automaticamente."
+                            : "El destinatario necesita configurar Yape, Plin o una cuenta bancaria para recibir pagos."}
                     </Text>
                 </View>
 
                 {/* ── CARD YAPE ── */}
                 {availableMethods.length > 1 && (
                     <View style={styles.methodSelector}>
+                        <View style={styles.methodSelectorHeader}>
+                            <View>
+                                <Text style={styles.methodSelectorTitle}>Elige como pagarle</Text>
+                                <Text style={styles.methodSelectorSub}>
+                                    {availableMethods.length} metodos disponibles del destinatario
+                                </Text>
+                            </View>
+                            <Ionicons name="wallet-outline" size={22} color="#2563EB" />
+                        </View>
                         {availableMethods.map((method: any, index: number) => {
                             const active =
                                 (activeMethod?.id && activeMethod.id === method.id)
                                 || (!activeMethod?.id && activeMethod?.tipo === method.tipo && index === 0);
+                            const optionTheme = getMethodTheme(method);
 
                             return (
                                 <TouchableOpacity
                                     key={`${method.tipo}-${method.id ?? index}`}
                                     style={[
                                         styles.methodOption,
-                                        active && { backgroundColor: getMethodTheme(method).primary },
+                                        {
+                                            borderColor: active ? optionTheme.primary : "#E2E8F0",
+                                            backgroundColor: active ? optionTheme.infoBg : "#FFFFFF",
+                                        },
                                     ]}
                                     onPress={() => setSelectedMethod(method)}
+                                    activeOpacity={0.82}
                                 >
-                                    <Text style={[
-                                        styles.methodOptionText,
-                                        active && styles.methodOptionTextActive,
+                                    <View style={[
+                                        styles.methodOptionIcon,
+                                        { backgroundColor: optionTheme.iconBg },
                                     ]}>
-                                        {getMethodLabel(method)}
-                                    </Text>
+                                        <Ionicons name={getMethodIcon(method)} size={18} color={optionTheme.primary} />
+                                    </View>
+                                    <View style={styles.methodOptionBody}>
+                                        <View style={styles.methodOptionTop}>
+                                            <Text style={styles.methodOptionText}>
+                                                {getMethodLabel(method)}
+                                            </Text>
+                                            {method.predeterminado && (
+                                                <Text style={[
+                                                    styles.methodDefaultBadge,
+                                                    { color: optionTheme.primary, backgroundColor: optionTheme.buttonSoft },
+                                                ]}>
+                                                    Principal
+                                                </Text>
+                                            )}
+                                        </View>
+                                        <Text style={styles.methodOptionDetail} numberOfLines={1}>
+                                            {getMethodPreview(method)}
+                                        </Text>
+                                    </View>
+                                    <Ionicons
+                                        name={active ? "checkmark-circle" : "ellipse-outline"}
+                                        size={22}
+                                        color={active ? optionTheme.primary : "#CBD5E1"}
+                                    />
                                 </TouchableOpacity>
                             );
                         })}
@@ -312,6 +398,7 @@ export default function PayDebtPage() {
                             styles.copyBtn,
                             { backgroundColor: methodTheme.buttonSoft, borderColor: methodTheme.border },
                             copied && styles.copyBtnSuccess,
+                            !copyValue && styles.disabledAction,
                         ]}
                         onPress={handleCopyNumber}
                         activeOpacity={0.8}
@@ -325,34 +412,61 @@ export default function PayDebtPage() {
                             {copied ? "Copiado" : getCopyButtonLabel(activeMethod)}
                         </Text>
                     </TouchableOpacity>
+                    {getExternalPaymentApp(activeMethod) && (
+                        <TouchableOpacity
+                            style={[
+                                styles.openAppBtn,
+                                { backgroundColor: methodTheme.primary },
+                                !copyValue && styles.disabledAction,
+                            ]}
+                            onPress={handleCopyAndOpenApp}
+                            activeOpacity={0.86}
+                            disabled={!copyValue}
+                        >
+                            <Ionicons name="open-outline" size={17} color="#FFFFFF" />
+                            <Text style={styles.openAppBtnText}>
+                                Copiar numero y abrir {getExternalPaymentApp(activeMethod)?.label}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 {/* ── PASOS ── */}
                 <Text style={styles.sectionLabel}>CÓMO PAGAR</Text>
 
-                <View style={styles.stepsCard}>
-                    {[
-                        { n: "1", text: "Copia el dato de cobro del destinatario", icon: "copy-outline" as const },
-                        { n: "2", text: `Realiza el pago por ${methodLabel}`, icon: getMethodIcon(activeMethod) },
-                        { n: "3", text: "Regresa aquí y confirma el pago", icon: "checkmark-circle-outline" as const },
-                    ].map((step, i) => (
-                        <View key={i} style={styles.stepRow}>
-                            <View style={[styles.stepNumBox, { backgroundColor: methodTheme.iconBg }]}>
-                                <Text style={[styles.stepNum, { color: methodTheme.primary }]}>{step.n}</Text>
+                {hasPaymentDestination ? (
+                    <View style={styles.stepsCard}>
+                        {[
+                            { n: "1", text: "Copia el dato de cobro del destinatario", icon: "copy-outline" as const },
+                            { n: "2", text: `Realiza el pago por ${methodLabel}`, icon: getMethodIcon(activeMethod) },
+                            { n: "3", text: "Regresa aqui y confirma el pago", icon: "checkmark-circle-outline" as const },
+                        ].map((step, i) => (
+                            <View key={i} style={styles.stepRow}>
+                                <View style={[styles.stepNumBox, { backgroundColor: methodTheme.iconBg }]}>
+                                    <Text style={[styles.stepNum, { color: methodTheme.primary }]}>{step.n}</Text>
+                                </View>
+                                <View style={styles.stepContent}>
+                                    <Ionicons name={step.icon} size={18} color={methodTheme.primary} />
+                                    <Text style={styles.stepText}>{step.text}</Text>
+                                </View>
+                                {i < 2 && (
+                                    <View style={[
+                                        styles.stepConnector,
+                                        { backgroundColor: methodTheme.border },
+                                    ]} />
+                                )}
                             </View>
-                            <View style={styles.stepContent}>
-                                <Ionicons name={step.icon} size={18} color={methodTheme.primary} />
-                                <Text style={styles.stepText}>{step.text}</Text>
-                            </View>
-                            {i < 2 && (
-                                <View style={[
-                                    styles.stepConnector,
-                                    { backgroundColor: methodTheme.border },
-                                ]} />
-                            )}
-                        </View>
-                    ))}
-                </View>
+                        ))}
+                    </View>
+                ) : (
+                    <View style={styles.noMethodHelp}>
+                        <Ionicons name="alert-circle-outline" size={22} color="#475569" />
+                        <Text style={styles.noMethodHelpTitle}>No hay metodo de cobro</Text>
+                        <Text style={styles.noMethodHelpText}>
+                            Cuando el destinatario agregue un metodo, esta pantalla mostrara las opciones para pagarle.
+                        </Text>
+                    </View>
+                )}
 
                 {/* ── BOTONES ── */}
                 <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -360,10 +474,10 @@ export default function PayDebtPage() {
                         style={[
                             styles.payBtn,
                             { backgroundColor: methodTheme.primary, shadowColor: methodTheme.primary },
-                            loading && styles.payBtnDisabled,
+                            (loading || !hasPaymentDestination) && styles.payBtnDisabled,
                         ]}
                         onPress={handlePay}
-                        disabled={loading}
+                        disabled={loading || !hasPaymentDestination}
                         activeOpacity={0.88}
                         onPressIn={pressIn}
                         onPressOut={pressOut}
@@ -371,7 +485,11 @@ export default function PayDebtPage() {
                         {loading ? (
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
-                            <Text style={styles.payBtnText}>Ya pague por {methodLabel}</Text>
+                            <Text style={styles.payBtnText}>
+                                {hasPaymentDestination
+                                    ? `Ya pague por ${methodLabel}`
+                                    : "Metodo no disponible"}
+                            </Text>
                         )}
                     </TouchableOpacity>
                 </Animated.View>
@@ -396,6 +514,38 @@ function getMethodLabel(method: any) {
     return "Yape";
 }
 
+function normalizeReceiverMethods(methods: any[]) {
+    const selectedByType = new Map<string, any>();
+    const result: any[] = [];
+
+    methods.forEach((method) => {
+        if (!method) return;
+
+        const type = String(method.tipo || "").toUpperCase();
+
+        if (type === "YAPE" || type === "PLIN") {
+            const current = selectedByType.get(type);
+            if (!current || method.predeterminado) {
+                selectedByType.set(type, method);
+            }
+            return;
+        }
+
+        result.push(method);
+    });
+
+    ["YAPE", "PLIN"].forEach((type) => {
+        const method = selectedByType.get(type);
+        if (method?.predeterminado) {
+            result.unshift(method);
+        } else if (method) {
+            result.push(method);
+        }
+    });
+
+    return result.sort((a, b) => Number(Boolean(b.predeterminado)) - Number(Boolean(a.predeterminado)));
+}
+
 function getMethodCopyValue(method: any) {
     if (!method) return "";
     if (method.tipo === "BANCO") return method.cuentaNumero || method.cci || "";
@@ -405,7 +555,7 @@ function getMethodCopyValue(method: any) {
 function getMethodIcon(method: any): keyof typeof Ionicons.glyphMap {
     if (!method) return "card-outline";
     if (method.tipo === "BANCO") return "business-outline";
-    return "phone-portrait-outline";
+    return "call-outline";
 }
 
 function getMethodDescription(method: any) {
@@ -414,11 +564,41 @@ function getMethodDescription(method: any) {
     return "Numero del destinatario";
 }
 
+function getMethodPreview(method: any) {
+    if (!method) return "Sin datos";
+    if (method.tipo === "BANCO") {
+        const banco = method.bancoNombre || "Cuenta bancaria";
+        const cuenta = method.cuentaNumero || method.cci || "Sin cuenta";
+        return `${banco} - ${cuenta}`;
+    }
+
+    const alias = method.alias || getMethodLabel(method);
+    return `${alias} - ${method.numeroTelefono || "Sin numero"}`;
+}
+
 function getCopyButtonLabel(method: any) {
     if (method?.tipo === "BANCO") return "Copiar cuenta";
     if (method?.tipo === "PLIN") return "Copiar numero Plin";
     if (method?.tipo === "YAPE") return "Copiar numero Yape";
     return "Copiar numero";
+}
+
+function getExternalPaymentApp(method: any) {
+    if (method?.tipo === "YAPE") {
+        return {
+            label: "Yape",
+            packageName: "com.bcp.innovacxion.yapeapp",
+        };
+    }
+
+    if (method?.tipo === "PLIN") {
+        return {
+            label: "Interbank",
+            packageName: "pe.com.interbank.mobilebanking",
+        };
+    }
+
+    return null;
 }
 
 function getMethodTheme(method: any, loading = false) {
@@ -632,34 +812,91 @@ const styles = StyleSheet.create({
 
     /* ── YAPE CARD ── */
     methodSelector: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 24,
+        padding: 16,
+        marginBottom: 18,
+        borderWidth: 1,
+        borderColor: "#DBEAFE",
+        shadowColor: "#94A3B8",
+        shadowOpacity: 0.08,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 12,
+        elevation: 2,
+        gap: 10,
+    },
+
+    methodSelectorHeader: {
         flexDirection: "row",
-        backgroundColor: "#E2E8F0",
-        borderRadius: 18,
-        padding: 4,
-        marginBottom: 16,
-    },
-
-    methodOption: {
-        flex: 1,
-        minHeight: 40,
-        borderRadius: 14,
         alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 8,
+        justifyContent: "space-between",
+        marginBottom: 4,
     },
 
-    methodOptionActive: {
-        backgroundColor: "#6D28D9",
-    },
-
-    methodOptionText: {
-        color: "#64748B",
-        fontSize: 12,
+    methodSelectorTitle: {
+        color: "#0F172A",
+        fontSize: 15,
         fontWeight: "800",
     },
 
-    methodOptionTextActive: {
-        color: "#FFFFFF",
+    methodSelectorSub: {
+        color: "#64748B",
+        fontSize: 12,
+        fontWeight: "600",
+        marginTop: 3,
+    },
+
+    methodOption: {
+        minHeight: 68,
+        borderRadius: 18,
+        borderWidth: 1.5,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 12,
+        paddingHorizontal: 12,
+        gap: 12,
+    },
+
+    methodOptionIcon: {
+        width: 42,
+        height: 42,
+        borderRadius: 14,
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+    },
+
+    methodOptionBody: {
+        flex: 1,
+        minWidth: 0,
+    },
+
+    methodOptionTop: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
+
+    methodOptionText: {
+        color: "#0F172A",
+        fontSize: 14,
+        fontWeight: "800",
+    },
+
+    methodOptionDetail: {
+        color: "#64748B",
+        fontSize: 12,
+        fontWeight: "600",
+        marginTop: 4,
+    },
+
+    methodDefaultBadge: {
+        borderRadius: 999,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        fontSize: 10,
+        fontWeight: "800",
+        overflow: "hidden",
     },
 
     yapeCard: {
@@ -759,6 +996,27 @@ const styles = StyleSheet.create({
         color: "#16A34A",
     },
 
+    disabledAction: {
+        opacity: 0.48,
+    },
+
+    openAppBtn: {
+        marginTop: 12,
+        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 14,
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "row",
+        gap: 8,
+    },
+
+    openAppBtnText: {
+        color: "#FFFFFF",
+        fontSize: 14,
+        fontWeight: "800",
+    },
+
     /* ── PASOS ── */
     sectionLabel: {
         fontSize: 11,
@@ -779,6 +1037,32 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowRadius: 12,
         elevation: 2,
+    },
+
+    noMethodHelp: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 24,
+        padding: 22,
+        marginBottom: 28,
+        borderWidth: 1,
+        borderColor: "#CBD5E1",
+        alignItems: "center",
+    },
+
+    noMethodHelpTitle: {
+        color: "#0F172A",
+        fontSize: 15,
+        fontWeight: "800",
+        marginTop: 10,
+    },
+
+    noMethodHelpText: {
+        color: "#64748B",
+        fontSize: 13,
+        fontWeight: "600",
+        lineHeight: 20,
+        marginTop: 6,
+        textAlign: "center",
     },
 
     stepRow: {

@@ -12,7 +12,7 @@ import {
     StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { COLORS } from "@/src/styles/colors";
 import {
@@ -32,8 +32,8 @@ const METHOD_OPTIONS: {
     label: string;
     icon: keyof typeof Ionicons.glyphMap;
 }[] = [
-    { tipo: "YAPE", label: "Yape", icon: "phone-portrait-outline" },
-    { tipo: "PLIN", label: "Plin", icon: "phone-portrait-outline" },
+    { tipo: "YAPE", label: "Yape", icon: "call-outline" },
+    { tipo: "PLIN", label: "Plin", icon: "call-outline" },
     { tipo: "BANCO", label: "Banco", icon: "business-outline" },
 ];
 
@@ -67,6 +67,22 @@ export default function CollectionMethodsScreen() {
         () => METHOD_OPTIONS.find((item) => item.tipo === selectedType)?.label || "Metodo",
         [selectedType]
     );
+    const isSingleMethodTypeTaken = useCallback((tipo: MetodoCobroTipo) =>
+        tipo !== "BANCO"
+        && methods.some((method) =>
+            method.tipo === tipo
+            && method.id !== editingMethod?.id
+        ), [editingMethod?.id, methods]);
+
+    useEffect(() => {
+        if (editingMethod || !isSingleMethodTypeTaken(selectedType)) return;
+
+        const nextType = METHOD_OPTIONS.find((option) =>
+            !isSingleMethodTypeTaken(option.tipo)
+        )?.tipo || "BANCO";
+
+        setSelectedType(nextType);
+    }, [editingMethod, isSingleMethodTypeTaken, selectedType]);
 
     useEffect(() => { loadMethods(); }, []);
 
@@ -105,6 +121,15 @@ export default function CollectionMethodsScreen() {
     const handleSave = async () => {
         if (saving) return;
         const cleanedPhone = phone.replace(/\D/g, "");
+
+        if (isSingleMethodTypeTaken(selectedType)) {
+            Alert.alert(
+                "Metodo ya registrado",
+                `Solo puedes tener un ${currentTypeLabel} activo. Edita el existente o eliminalo para agregar otro.`
+            );
+            return;
+        }
+
         const payload =
             selectedType === "BANCO"
                 ? { tipo: selectedType, alias: "Cuenta bancaria", bancoNombre: bankName.trim(), cuentaNumero: accountNumber.trim(), cci: cci.trim(), titular: holder.trim(), predeterminado: !hasMethods }
@@ -248,11 +273,23 @@ export default function CollectionMethodsScreen() {
                 <View style={styles.segmented}>
                     {METHOD_OPTIONS.map((opt) => {
                         const active = opt.tipo === selectedType;
+                        const disabled = isSingleMethodTypeTaken(opt.tipo);
                         return (
                             <TouchableOpacity
                                 key={opt.tipo}
-                                style={[styles.segment, active && styles.segmentActive]}
+                                style={[
+                                    styles.segment,
+                                    active && styles.segmentActive,
+                                    disabled && styles.segmentDisabled,
+                                ]}
                                 onPress={() => {
+                                    if (disabled) {
+                                        Alert.alert(
+                                            "Metodo ya registrado",
+                                            `Ya tienes un ${opt.label} activo. Puedes editarlo o eliminarlo si quieres cambiarlo.`
+                                        );
+                                        return;
+                                    }
                                     setSelectedType(opt.tipo);
                                     setPhone("");
                                     setBankName("");
@@ -364,7 +401,7 @@ function MethodCard({
         <View style={styles.methodCard}>
             <View style={styles.methodIconWrap}>
                 <Ionicons
-                    name={method.tipo === "BANCO" ? "business-outline" : "phone-portrait-outline"}
+                    name={method.tipo === "BANCO" ? "business-outline" : "call-outline"}
                     size={20}
                     color="#2563EB"
                 />
@@ -670,6 +707,9 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 3 },
         elevation: 4,
+    },
+    segmentDisabled: {
+        opacity: 0.42,
     },
     segmentText: { color: "#64748B", fontSize: 13, fontWeight: "600" },
     segmentTextActive: { color: "#FFFFFF" },

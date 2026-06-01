@@ -24,6 +24,7 @@ const STATUS_STYLES: Record<string, { label: string; color: string; bg: string; 
 export default function PaymentHistoryScreen() {
     const { returnTo } = useLocalSearchParams();
     const shouldReturnToDashboard = returnTo === "dashboard";
+    const shouldReturnToActivity = returnTo === "activity";
     const [payments, setPayments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -90,11 +91,18 @@ export default function PaymentHistoryScreen() {
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => router.replace(
-                        shouldReturnToDashboard
-                            ? "/payment?returnTo=dashboard"
-                            : "/payment" as any
-                    )}
+                    onPress={() => {
+                        if (shouldReturnToActivity && router.canGoBack()) {
+                            router.back();
+                            return;
+                        }
+
+                        router.replace(
+                            shouldReturnToDashboard
+                                ? "/payment?returnTo=dashboard"
+                                : "/payment" as any
+                        );
+                    }}
                 >
                     <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
@@ -230,7 +238,11 @@ export default function PaymentHistoryScreen() {
                                             pathname: "/payment/receipt",
                                             params: {
                                                 paymentId: String(payment.id),
-                                                ...(shouldReturnToDashboard ? { returnTo: "historyDashboard" } : { returnTo: "history" }),
+                                                ...(shouldReturnToDashboard
+                                                    ? { returnTo: "historyDashboard" }
+                                                    : shouldReturnToActivity
+                                                        ? { returnTo: "activity" }
+                                                        : { returnTo: "history" }),
                                             },
                                         });
                                     }}

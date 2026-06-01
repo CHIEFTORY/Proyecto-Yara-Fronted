@@ -66,13 +66,21 @@ export default function ReceiptScreen() {
                 : returnTo === "payment"
                     ? "/payment"
                     : "/payment/history";
+    const handleBack = () => {
+        if (returnTo === "activity" && router.canGoBack()) {
+            router.back();
+            return;
+        }
+
+        router.replace(backTarget as any);
+    };
 
     return (
         <SafeAreaView style={styles.safe}>
             <StatusBar barStyle="light-content" />
 
             <View style={styles.header}>
-                <TouchableOpacity style={styles.headerButton} onPress={() => router.replace(backTarget as any)}>
+                <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
                     <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
                 <View style={styles.headerCenter}>

@@ -24,6 +24,7 @@ import {
 } from "@/src/styles/colors";
 
 import {
+    getPendingInvitations,
     getUnreadNotificationsCount,
 } from "@/src/services/notificationService";
 
@@ -114,8 +115,12 @@ export default function TabsLayout() {
 
     const loadUnreadNotifications = async () => {
         try {
-            const total = await getUnreadNotificationsCount();
-            setUnreadNotifications(total);
+            const [unreadTotal, pendingInvitations] = await Promise.all([
+                getUnreadNotificationsCount(),
+                getPendingInvitations(),
+            ]);
+
+            setUnreadNotifications(unreadTotal + pendingInvitations.length);
         } catch (error) {
             console.log(error);
         }

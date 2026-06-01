@@ -8,40 +8,36 @@
     "scheme": "yara",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-
     "ios": {
       "supportsTablet": true
     },
-
     "android": {
+      "package": "com.mauricioparra.yara",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#000000",
         "foregroundImage": "./assets/images/yara_android_foreground_blue.png",
-
         "monochromeImage": "./assets/images/yara_monochrome_blue.png"
       },
-
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
-
     "web": {
       "output": "static",
       "favicon": "./assets/images/yara_app_icon_blue.png"
     },
-
     "plugins": [
       "expo-router",
-
       [
         "expo-splash-screen",
         {
+          "image": "./assets/images/yara_app_icon_blue.png",
+          "imageWidth": 120,
+          "resizeMode": "contain",
           "backgroundColor": "#000000"
         }
       ],
-
       "expo-secure-store",
-
       [
         "expo-notifications",
         {
@@ -49,10 +45,15 @@
         }
       ]
     ],
-
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7f97f53c-3c6f-439a-99c3-f4aabfa07b98"
+      }
     }
   }
 }

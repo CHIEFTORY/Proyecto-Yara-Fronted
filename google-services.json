@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "8663352301",
+    "project_id": "yara-b3e38",
+    "storage_bucket": "yara-b3e38.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:8663352301:android:e1f3ad1e1373ad86461de4",
+        "android_client_info": {
+          "package_name": "com.mauricioparra.yara"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxJHIBf1TFcqgTRbnrttDvmoNv9qveehs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

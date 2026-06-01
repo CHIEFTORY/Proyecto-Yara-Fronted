@@ -1,7 +1,9 @@
 import { COLORS } from "@/src/styles/colors";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { loginRequest } from "@/src/services/authService";
 import { saveToken } from "@/src/utils/authStorage";
+import { savePushToken } from "@/src/services/notificationService";
+import { registerForPushNotifications } from "@/src/utils/pushNotifications";
 
 import { router } from "expo-router";
 import {
@@ -12,7 +14,13 @@ import {
     StyleSheet,
     SafeAreaView,
     ActivityIndicator,
+    StatusBar,
+    Animated,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function LoginScreen() {
 
@@ -20,274 +28,474 @@ export default function LoginScreen() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [emailFocused, setEmailFocused] = useState(false);
+    const [passFocused, setPassFocused] = useState(false);
+
+    const shakeAnim = useRef(new Animated.Value(0)).current;
+
+    const shakeError = () => {
+        Animated.sequence([
+            Animated.timing(shakeAnim, { toValue: 10, duration: 60, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -10, duration: 60, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: true }),
+        ]).start();
+    };
 
     const handleLogin = async () => {
-
-        // 🔥 VALIDAR CAMPOS
         if (!email || !password) {
-
-            setErrorMessage(
-                "Completa todos los campos"
-            );
-
+            setErrorMessage("Completa todos los campos");
+            shakeError();
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
         if (!emailRegex.test(email)) {
-
-            setErrorMessage(
-                "Ingresa un correo válido"
-            );
-
+            setErrorMessage("Ingresa un correo válido");
+            shakeError();
             return;
         }
 
         try {
-
             setLoading(true);
-
             setErrorMessage("");
 
-            const response = await loginRequest(
-                email,
-                password
-            );
+            const response = await loginRequest(email, password);
 
-            // 🔥 MFA
             if (response.mfaRequired) {
-
                 setLoading(false);
-
                 return;
             }
 
-            // 🔥 GUARDAR TOKEN
-            await saveToken(
-                response.token
-            );
-
+            await saveToken(response.token);
+            registerForPushNotifications()
+                .then((pushToken) => {
+                    if (pushToken) {
+                        savePushToken(pushToken).catch(console.log);
+                    }
+                })
+                .catch(console.log);
             router.replace("/(tabs)");
 
         } catch (error: any) {
-
-            // 🔥 ERROR BACKEND
-            if (error.response?.status === 500) {
-
-                setErrorMessage(
-                    "Correo o contraseña incorrectos"
-                );
-
+            if (
+                error.response?.status === 401 ||
+                error.response?.status === 403 ||
+                error.response?.status === 500
+            ) {
+                setErrorMessage("Correo o contraseña incorrectos");
+            } else if (error.response?.status === 429) {
+                setErrorMessage("Demasiados intentos. Intenta nuevamente en 1 minuto");
             } else {
-
-                setErrorMessage(
-                    "No se pudo conectar al servidor"
-                );
+                setErrorMessage("No se pudo conectar al servidor");
             }
-
+            shakeError();
         } finally {
-
             setLoading(false);
         }
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.root}>
+            <StatusBar barStyle="dark-content" />
 
-            <View style={styles.logoContainer}>
-                <View style={styles.logo}>
-                    <Text style={styles.logoText}>Y</Text>
-                </View>
+            {/* Fondo con formas decorativas */}
+            <View style={styles.bgCircle1} />
+            <View style={styles.bgCircle2} />
+            <View style={styles.bgCircle3} />
 
-                <Text style={styles.title}>
-                    Bienvenido a Yara
-                </Text>
-
-                <Text style={styles.subtitle}>
-                    Gestiona tus gastos compartidos
-                </Text>
-            </View>
-
-            <View style={styles.card}>
-
-                <Text style={styles.label}>
-                    Correo electrónico
-                </Text>
-
-                <TextInput
-                    placeholder="tu@email.com"
-                    placeholderTextColor={COLORS.subtitle}
-                    style={styles.input}
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                />
-
-                <Text style={styles.label}>
-                    Contraseña
-                </Text>
-
-                <TextInput
-                    placeholder="********"
-                    placeholderTextColor={COLORS.subtitle}
-                    secureTextEntry
-                    style={styles.input}
-                    value={password}
-                    onChangeText={setPassword}
-                />
-
-                {
-                    errorMessage ? (
-
-                        <Text style={styles.errorText}>
-                            {errorMessage}
-                        </Text>
-
-                    ) : null
-                }
-
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={handleLogin}
-                    disabled={loading}
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
+                <ScrollView
+                    contentContainerStyle={styles.scroll}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
                 >
+                    {/* ── LOGO + TÍTULO ── */}
+                    <View style={styles.logoContainer}>
+                        <View style={styles.logoShadow}>
+                            <View style={styles.logo}>
+                                <Text style={styles.logoText}>Y</Text>
+                            </View>
+                        </View>
 
-                    {
-                        loading ? (
+                        <Text style={styles.title}>Bienvenido a Yara</Text>
+                        <Text style={styles.subtitle}>Gestiona tus gastos compartidos</Text>
+                    </View>
 
-                            <ActivityIndicator color="white" />
+                    {/* ── CARD ── */}
+                    <Animated.View
+                        style={[
+                            styles.card,
+                            { transform: [{ translateX: shakeAnim }] }
+                        ]}
+                    >
+                        {/* Email */}
+                        <View style={styles.fieldGroup}>
+                            <Text style={styles.label}>Correo electrónico</Text>
+                            <View style={[
+                                styles.inputWrapper,
+                                emailFocused && styles.inputWrapperFocused,
+                                errorMessage && styles.inputWrapperError,
+                            ]}>
+                                <Ionicons name="mail-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+                                <TextInput
+                                    placeholder="tu@email.com"
+                                    placeholderTextColor="#CBD5E1"
+                                    style={styles.input}
+                                    value={email}
+                                    onChangeText={(t) => { setEmail(t); setErrorMessage(""); }}
+                                    autoCapitalize="none"
+                                    keyboardType="email-address"
+                                    onFocus={() => setEmailFocused(true)}
+                                    onBlur={() => setEmailFocused(false)}
+                                />
+                            </View>
+                        </View>
 
-                        ) : (
+                        {/* Contraseña */}
+                        <View style={styles.fieldGroup}>
+                            <View style={styles.labelRow}>
+                                <Text style={styles.label}>Contraseña</Text>
+                                <TouchableOpacity onPress={() => {}}>
+                                    <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={[
+                                styles.inputWrapper,
+                                passFocused && styles.inputWrapperFocused,
+                                errorMessage && styles.inputWrapperError,
+                            ]}>
+                                <Ionicons name="lock-closed-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+                                <TextInput
+                                    placeholder="••••••••"
+                                    placeholderTextColor="#CBD5E1"
+                                    secureTextEntry={!showPassword}
+                                    style={styles.input}
+                                    value={password}
+                                    onChangeText={(t) => { setPassword(t); setErrorMessage(""); }}
+                                    onFocus={() => setPassFocused(true)}
+                                    onBlur={() => setPassFocused(false)}
+                                />
+                                <TouchableOpacity
+                                    onPress={() => setShowPassword(!showPassword)}
+                                    style={styles.eyeBtn}
+                                >
+                                    <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#94A3B8" />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
 
-                            <Text style={styles.buttonText}>
-                                Iniciar sesión
-                            </Text>
-                        )
-                    }
+                        {/* Error */}
+                        {errorMessage ? (
+                            <View style={styles.errorBox}>
+                                <Ionicons name="alert-circle-outline" size={18} color="#DC2626" />
+                                <Text style={styles.errorText}>{errorMessage}</Text>
+                            </View>
+                        ) : null}
 
-                </TouchableOpacity>
+                        {/* Botón */}
+                        <TouchableOpacity
+                            style={[styles.button, loading && styles.buttonDisabled]}
+                            onPress={handleLogin}
+                            disabled={loading}
+                            activeOpacity={0.85}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="white" />
+                            ) : (
+                                <View style={styles.buttonContent}>
+                                    <Text style={styles.buttonText}>Iniciar sesión</Text>
+                                    <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                                </View>
+                            )}
+                        </TouchableOpacity>
 
-                <TouchableOpacity
-                    onPress={() =>
-                        router.push("/register")
-                    }
-                >
+                        {/* Divider */}
+                        <View style={styles.dividerRow}>
+                            <View style={styles.dividerLine} />
+                            <Text style={styles.dividerText}>¿nuevo aquí?</Text>
+                            <View style={styles.dividerLine} />
+                        </View>
 
-                    <Text style={styles.registerText}>
+                        {/* Registro */}
+                        <TouchableOpacity
+                            style={styles.registerButton}
+                            onPress={() => router.push("/register")}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={styles.registerButtonText}>Crear cuenta gratis</Text>
+                        </TouchableOpacity>
 
-                        ¿No tienes cuenta?
-                        <Text style={styles.registerLink}>
-                            {" "}Crear cuenta
-                        </Text>
+                    </Animated.View>
 
-                    </Text>
-
-                </TouchableOpacity>
-
-            </View>
-
+                </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
 
-    container: {
+    root: {
         flex: 1,
-        backgroundColor: COLORS.background,
+        backgroundColor: "#F0F4FF",
+    },
+
+    /* Decoraciones de fondo */
+    bgCircle1: {
+        position: "absolute",
+        width: 320,
+        height: 320,
+        borderRadius: 160,
+        backgroundColor: "rgba(37,99,235,0.07)",
+        top: -100,
+        right: -80,
+    },
+
+    bgCircle2: {
+        position: "absolute",
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        backgroundColor: "rgba(124,58,237,0.05)",
+        bottom: 80,
+        left: -60,
+    },
+
+    bgCircle3: {
+        position: "absolute",
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: "rgba(22,163,74,0.05)",
+        top: 200,
+        left: 20,
+    },
+
+    scroll: {
+        flexGrow: 1,
         justifyContent: "center",
-        padding: 24,
+        paddingHorizontal: 24,
+        paddingVertical: 40,
     },
 
-    errorText: {
-        color: "#EF4444",
-        marginBottom: 14,
-        fontSize: 14,
-        fontWeight: "500",
-    },
-
+    /* ── LOGO ── */
     logoContainer: {
         alignItems: "center",
-        marginBottom: 32,
+        marginBottom: 36,
+    },
+
+    logoShadow: {
+        shadowColor: COLORS.primary,
+        shadowOpacity: 0.35,
+        shadowOffset: { width: 0, height: 10 },
+        shadowRadius: 20,
+        elevation: 10,
+        marginBottom: 22,
     },
 
     logo: {
-        width: 70,
-        height: 70,
-        borderRadius: 20,
+        width: 76,
+        height: 76,
+        borderRadius: 24,
         backgroundColor: COLORS.primary,
         justifyContent: "center",
         alignItems: "center",
-        marginBottom: 20,
     },
 
     logoText: {
-        color: COLORS.white,
-        fontSize: 28,
-        fontWeight: "bold",
+        color: "#FFFFFF",
+        fontSize: 34,
+        fontWeight: "800",
     },
 
     title: {
         fontSize: 30,
-        fontWeight: "bold",
-        color: COLORS.text,
+        fontWeight: "800",
+        color: "#1E293B",
+        letterSpacing: -0.5,
+        marginBottom: 8,
     },
 
     subtitle: {
-        marginTop: 8,
-        fontSize: 16,
-        color: COLORS.subtitle,
+        fontSize: 15,
+        color: "#94A3B8",
+        fontWeight: "500",
     },
 
+    /* ── CARD ── */
     card: {
-        backgroundColor: COLORS.white,
-        borderRadius: 24,
-        padding: 24,
-        shadowColor: "#000",
-        shadowOpacity: 0.08,
-        shadowRadius: 10,
-        elevation: 4,
+        backgroundColor: "#FFFFFF",
+        borderRadius: 32,
+        padding: 28,
+        shadowColor: "#94A3B8",
+        shadowOpacity: 0.15,
+        shadowOffset: { width: 0, height: 12 },
+        shadowRadius: 28,
+        elevation: 8,
+    },
+
+    fieldGroup: {
+        marginBottom: 20,
+    },
+
+    labelRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 10,
     },
 
     label: {
-        fontSize: 14,
+        fontSize: 13,
+        fontWeight: "700",
+        color: "#475569",
+        marginBottom: 10,
+        letterSpacing: 0.2,
+    },
+
+    forgotText: {
+        fontSize: 13,
         fontWeight: "600",
-        marginBottom: 8,
-        color: COLORS.text,
+        color: COLORS.primary,
     },
 
-    input: {
-        backgroundColor: COLORS.inputBackground,
-        borderRadius: 14,
-        padding: 16,
-        marginBottom: 20,
-        borderWidth: 1,
-        borderColor: COLORS.border,
-    },
-
-    button: {
-        backgroundColor: COLORS.primary,
-        padding: 18,
-        borderRadius: 16,
+    inputWrapper: {
+        flexDirection: "row",
         alignItems: "center",
-        marginTop: 10,
+        backgroundColor: "#F8FAFC",
+        borderRadius: 16,
+        borderWidth: 1.5,
+        borderColor: "#E2E8F0",
+        paddingHorizontal: 14,
+        gap: 10,
     },
 
-    buttonText: {
-        color: COLORS.white,
-        fontWeight: "bold",
+    inputWrapperFocused: {
+        borderColor: COLORS.primary,
+        backgroundColor: "#EFF6FF",
+    },
+
+    inputWrapperError: {
+        borderColor: "#FCA5A5",
+        backgroundColor: "#FFF5F5",
+    },
+
+    inputIcon: {
         fontSize: 16,
     },
 
-    registerText: {
-        textAlign: "center",
-        marginTop: 22,
-        color: COLORS.subtitle,
+    input: {
+        flex: 1,
+        paddingVertical: 16,
+        fontSize: 15,
+        color: "#1E293B",
+        fontWeight: "500",
     },
 
-    registerLink: {
-        color: COLORS.primary,
-        fontWeight: "bold",
+    eyeBtn: {
+        padding: 4,
+    },
+
+    eyeIcon: {
+        fontSize: 16,
+    },
+
+    /* Error */
+    errorBox: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#FEF2F2",
+        borderRadius: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        marginBottom: 16,
+        gap: 8,
+        borderWidth: 1,
+        borderColor: "#FECACA",
+    },
+
+    errorIcon: {
+        fontSize: 14,
+    },
+
+    errorText: {
+        color: "#DC2626",
+        fontSize: 13,
+        fontWeight: "600",
+        flex: 1,
+    },
+
+    /* Botón principal */
+    button: {
+        backgroundColor: COLORS.primary,
+        padding: 18,
+        borderRadius: 18,
+        alignItems: "center",
+        shadowColor: COLORS.primary,
+        shadowOpacity: 0.4,
+        shadowOffset: { width: 0, height: 8 },
+        shadowRadius: 16,
+        elevation: 6,
+    },
+
+    buttonDisabled: {
+        opacity: 0.7,
+    },
+
+    buttonText: {
+        color: "#FFFFFF",
+        fontWeight: "800",
+        fontSize: 16,
+        letterSpacing: 0.3,
+    },
+
+    buttonContent: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 7,
+    },
+
+    /* Divider */
+    dividerRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        marginTop: 28,
+        marginBottom: 16,
+    },
+
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: "#E2E8F0",
+    },
+
+    dividerText: {
+        fontSize: 12,
+        color: "#94A3B8",
+        fontWeight: "600",
+    },
+
+    /* Botón registro */
+    registerButton: {
+        backgroundColor: "#F1F5F9",
+        borderRadius: 18,
+        padding: 16,
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#E2E8F0",
+    },
+
+    registerButtonText: {
+        color: "#475569",
+        fontWeight: "700",
+        fontSize: 15,
     },
 });

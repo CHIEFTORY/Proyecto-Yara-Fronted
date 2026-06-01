@@ -1,104 +1,70 @@
 import {
-    View,
     Text,
     TouchableOpacity,
     StyleSheet,
+    View,
 } from "react-native";
-
-import { COLORS } from "@/src/styles/colors";
+import { Ionicons } from "@expo/vector-icons";
 
 type Props = {
     title: string;
-    icon: string;
+    icon: keyof typeof Ionicons.glyphMap;
     color: string;
-    background: string;
     onPress?: () => void;
 };
 
 export default function QuickAction({
-
-                                        title,
-                                        icon,
-                                        color,
-                                        background,
-                                        onPress,
-
-                                    }: Props) {
-
+    title,
+    icon,
+    color,
+    onPress,
+}: Props) {
     return (
-
         <TouchableOpacity
-            style={styles.card}
+            style={[styles.button, { backgroundColor: color }]}
             onPress={onPress}
-            activeOpacity={0.8}
+            activeOpacity={0.82}
         >
-
-            <View
-                style={[
-                    styles.iconContainer,
-                    {
-                        backgroundColor: background,
-                    }
-                ]}
-            >
-
-                <Text
-                    style={[
-                        styles.icon,
-                        {
-                            color,
-                        }
-                    ]}
-                >
-                    {icon}
-                </Text>
-
+            <View style={styles.iconWrapper}>
+                <Ionicons name={icon} size={24} color="#FFFFFF" />
             </View>
 
-            <Text style={styles.title}>
-                {title}
-            </Text>
-
+            <Text style={styles.title}>{title}</Text>
         </TouchableOpacity>
     );
 }
 
 const styles = StyleSheet.create({
-
-    card: {
-        backgroundColor: COLORS.white,
-        borderRadius: 20,
-        padding: 18,
-        flex: 1,
-        minWidth: "30%",
-        maxWidth: "31%",
-        alignItems: "center",
-
-        shadowColor: "#000",
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-
-        elevation: 2,
-    },
-
-    iconContainer: {
-        width: 54,
-        height: 54,
-        borderRadius: 18,
+    button: {
+        width: 118,
+        minHeight: 92,
+        borderRadius: 22,
+        paddingVertical: 14,
+        paddingHorizontal: 12,
         justifyContent: "center",
         alignItems: "center",
-        marginBottom: 14,
+        gap: 9,
+        shadowColor: "#0F172A",
+        shadowOpacity: 0.14,
+        shadowOffset: { width: 0, height: 7 },
+        shadowRadius: 14,
+        elevation: 4,
     },
 
-    icon: {
-        fontSize: 24,
-        fontWeight: "bold",
+    iconWrapper: {
+        width: 42,
+        height: 42,
+        borderRadius: 15,
+        backgroundColor: "rgba(255,255,255,0.18)",
+        alignItems: "center",
+        justifyContent: "center",
     },
 
     title: {
-        fontSize: 15,
-        fontWeight: "600",
-        color: COLORS.text,
+        fontSize: 12,
+        fontWeight: "900",
+        color: "#FFFFFF",
         textAlign: "center",
+        lineHeight: 16,
     },
 });

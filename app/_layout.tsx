@@ -1,7 +1,24 @@
-import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
+import {
+    Stack,
+} from "expo-router";
 
-export default function RootLayout() {
+import {
+    StatusBar,
+} from "expo-status-bar";
+
+import {
+    ThemeProvider,
+    useTheme,
+} from "@/src/context/ThemeContext";
+import {
+    ToastProvider,
+} from "@/src/context/ToastContext";
+
+function AppContent() {
+
+    const {
+        theme,
+    } = useTheme();
 
     return (
         <>
@@ -11,7 +28,29 @@ export default function RootLayout() {
                 }}
             />
 
-            <StatusBar style="auto" />
+            <StatusBar
+                style={
+                    theme === "dark"
+                        ? "light"
+                        : "dark"
+                }
+            />
         </>
+    );
+}
+
+export default function RootLayout() {
+
+    return (
+
+        <ThemeProvider>
+
+            <ToastProvider>
+
+                <AppContent />
+
+            </ToastProvider>
+
+        </ThemeProvider>
     );
 }

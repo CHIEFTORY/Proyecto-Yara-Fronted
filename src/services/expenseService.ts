@@ -72,3 +72,14 @@ export const getExpenseChart =
 
         return response.data;
     };
+
+export const getExpenseCategories =
+    async () => {
+
+        const response =
+            await api.get(
+                "/gastos/categorias"
+            );
+
+        return response.data;
+    };

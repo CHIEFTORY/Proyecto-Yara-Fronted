@@ -3,6 +3,18 @@ import {
     router,
 } from "expo-router";
 
+import React, {
+    useEffect,
+    useState,
+} from "react";
+
+import {
+    View,
+    Text,
+    StyleSheet,
+    Platform,
+} from "react-native";
+
 import {
     Ionicons,
 } from "@expo/vector-icons";
@@ -11,52 +23,140 @@ import {
     COLORS,
 } from "@/src/styles/colors";
 
+import {
+    getUnreadNotificationsCount,
+} from "@/src/services/notificationService";
+
+/* ── Ícono personalizado con badge ── */
+function TabIcon({
+                     name,
+                     color,
+                     size,
+                     badge,
+                     focused,
+                 }: {
+    name: any;
+    color: string;
+    size: number;
+    badge?: number;
+    focused: boolean;
+}) {
+    return (
+        <View style={tabIconStyles.wrapper}>
+            {focused && <View style={tabIconStyles.activePill} />}
+            <Ionicons
+                name={focused ? name.replace("-outline", "") : name}
+                size={size}
+                color={color}
+            />
+            {badge && badge > 0 ? (
+                <View style={tabIconStyles.badge}>
+                    <Text style={tabIconStyles.badgeText}>
+                        {badge > 99 ? "99+" : badge}
+                    </Text>
+                </View>
+            ) : null}
+        </View>
+    );
+}
+
+const tabIconStyles = StyleSheet.create({
+    wrapper: {
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        width: 48,
+        height: 36,
+    },
+
+    activePill: {
+        position: "absolute",
+        top: 0,
+        width: 36,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: COLORS.primary,
+    },
+
+    badge: {
+        position: "absolute",
+        top: -2,
+        right: 2,
+        backgroundColor: "#EF4444",
+        borderRadius: 10,
+        minWidth: 18,
+        height: 18,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 4,
+        borderWidth: 2,
+        borderColor: "#FFFFFF",
+    },
+
+    badgeText: {
+        color: "#FFFFFF",
+        fontSize: 10,
+        fontWeight: "800",
+    },
+});
+
 export default function TabsLayout() {
 
+    const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+    useEffect(() => {
+        loadUnreadNotifications();
+        const interval = setInterval(() => {
+            loadUnreadNotifications();
+        }, 3000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const loadUnreadNotifications = async () => {
+        try {
+            const total = await getUnreadNotificationsCount();
+            setUnreadNotifications(total);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     return (
-
         <Tabs
-
             screenOptions={{
-
                 headerShown: false,
-
-                tabBarActiveTintColor:
-                COLORS.primary,
-
-                tabBarInactiveTintColor:
-                    "#94A3B8",
-
+                tabBarActiveTintColor: COLORS.primary,
+                tabBarInactiveTintColor: "#94A3B8",
+                tabBarShowLabel: true,
+                tabBarLabelStyle: {
+                    fontSize: 11,
+                    fontWeight: "700",
+                    marginTop: 2,
+                },
                 tabBarStyle: {
-
-                    height: 74,
-
-                    paddingBottom: 10,
-
+                    height: Platform.OS === "ios" ? 86 : 74,
+                    paddingBottom: Platform.OS === "ios" ? 22 : 10,
                     paddingTop: 10,
-
                     borderTopWidth: 0,
-
-                    elevation: 10,
-
-                    shadowOpacity: 0.06,
+                    backgroundColor: "#FFFFFF",
+                    elevation: 0,
+                    shadowColor: "#94A3B8",
+                    shadowOpacity: 0.12,
+                    shadowOffset: { width: 0, height: -4 },
+                    shadowRadius: 16,
                 },
             }}
         >
-
             <Tabs.Screen
                 name="index"
-
                 options={{
-
                     title: "Inicio",
-
-                    tabBarIcon: ({ color, size }) => (
-
-                        <Ionicons
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <TabIcon
                             name="home-outline"
-                            size={size}
                             color={color}
+                            size={size}
+                            focused={focused}
                         />
                     ),
                 }}
@@ -64,25 +164,19 @@ export default function TabsLayout() {
 
             <Tabs.Screen
                 name="groups"
-
                 options={{
-
                     title: "Grupos",
-
-                    tabBarIcon: ({ color, size }) => (
-
-                        <Ionicons
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <TabIcon
                             name="people-outline"
-                            size={size}
                             color={color}
+                            size={size}
+                            focused={focused}
                         />
                     ),
                 }}
-
                 listeners={{
-
                     tabPress: () => {
-
                         router.replace("/groups" as any);
                     },
                 }}
@@ -90,42 +184,39 @@ export default function TabsLayout() {
 
             <Tabs.Screen
                 name="activity"
-
                 options={{
-
                     title: "Actividad",
-
-                    tabBarIcon: ({ color, size }) => (
-
-                        <Ionicons
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <TabIcon
                             name="pulse-outline"
-                            size={size}
                             color={color}
+                            size={size}
+                            focused={focused}
+                            badge={unreadNotifications}
                         />
                     ),
+                }}
+                listeners={{
+                    tabPress: () => {
+                        loadUnreadNotifications();
+                    },
                 }}
             />
 
             <Tabs.Screen
                 name="profile"
-
                 options={{
-
                     title: "Perfil",
-
-                    tabBarIcon: ({ color, size }) => (
-
-                        <Ionicons
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <TabIcon
                             name="person-outline"
-                            size={size}
                             color={color}
+                            size={size}
+                            focused={focused}
                         />
                     ),
                 }}
             />
-
-
-
         </Tabs>
     );
 }

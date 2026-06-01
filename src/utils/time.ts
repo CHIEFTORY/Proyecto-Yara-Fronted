@@ -1,38 +1,39 @@
 export const formatTimeAgo = (
-    dateString: string
+    dateString: string,
+    referenceDate: Date = new Date()
 ) => {
+    const date = new Date(dateString);
 
-    const now = new Date();
-
-    const date =
-        new Date(dateString);
-
-    const seconds =
-        Math.floor(
-            (now.getTime() - date.getTime())
-            / 1000
-        );
-
-    if (seconds < 60) {
-        return "Hace unos segundos";
+    if (Number.isNaN(date.getTime())) {
+        return "Sin fecha";
     }
 
-    const minutes =
-        Math.floor(seconds / 60);
+    const seconds = Math.max(
+        0,
+        Math.floor((referenceDate.getTime() - date.getTime()) / 1000)
+    );
+
+    if (seconds < 10) {
+        return "Ahora";
+    }
+
+    if (seconds < 60) {
+        return `Hace ${seconds} s`;
+    }
+
+    const minutes = Math.floor(seconds / 60);
 
     if (minutes < 60) {
         return `Hace ${minutes} min`;
     }
 
-    const hours =
-        Math.floor(minutes / 60);
+    const hours = Math.floor(minutes / 60);
 
     if (hours < 24) {
         return `Hace ${hours} h`;
     }
 
-    const days =
-        Math.floor(hours / 24);
+    const days = Math.floor(hours / 24);
 
     if (days === 1) {
         return "Ayer";

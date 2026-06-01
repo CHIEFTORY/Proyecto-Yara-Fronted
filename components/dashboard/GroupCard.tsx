@@ -1,216 +1,110 @@
-import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
-} from "react-native";
-
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
+import { useRef } from "react";
 import { COLORS } from "@/src/styles/colors";
+import { Ionicons } from "@expo/vector-icons";
 
 type Props = {
-
     name: string;
     lastActivity: string;
     miBalance: number;
     color: string;
-
     onPress?: () => void;
 };
 
-export default function GroupCard({
+export default function GroupCard({ name, lastActivity, miBalance, color, onPress }: Props) {
+    const scaleAnim = useRef(new Animated.Value(1)).current;
 
-                                      name,
-                                      lastActivity,
-                                      miBalance,
-                                      color,
-                                      onPress,
+    const onPressIn  = () => Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
+    const onPressOut = () => Animated.spring(scaleAnim, { toValue: 1, friction: 4, useNativeDriver: true }).start();
 
-                                  }: Props) {
+    const positivo = miBalance > 0;
+    const neutral  = miBalance === 0;
 
+    const initial = name?.charAt(0)?.toUpperCase() || "G";
 
     return (
-
-        <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.85}
-            onPress={onPress}
-        >
-
-            <View style={styles.leftSection}>
-
-                <View
-                    style={[
-                        styles.iconContainer,
-                        {
-                            backgroundColor: color,
-                        }
-                    ]}
-                >
-
-                    <Text style={styles.icon}>
-                        👥
-                    </Text>
-
+        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+            <TouchableOpacity
+                style={styles.card}
+                activeOpacity={1}
+                onPress={onPress}
+                onPressIn={onPressIn}
+                onPressOut={onPressOut}
+            >
+                {/* Avatar con inicial */}
+                <View style={[styles.avatar, { backgroundColor: color }]}>
+                    <Text style={styles.avatarText}>{initial}</Text>
+                    <View style={styles.emojiOverlay}>
+                        <Ionicons name="people-outline" size={13} color={COLORS.primary} />
+                    </View>
                 </View>
 
-                <View style={styles.infoContainer}>
-
-                    <Text style={styles.name}>
-                        {name}
-                    </Text>
-
-                    <Text style={styles.activity}>
-                        {lastActivity}
-                    </Text>
-
+                {/* Info */}
+                <View style={styles.info}>
+                    <Text style={styles.name} numberOfLines={1}>{name}</Text>
+                    <Text style={styles.activity} numberOfLines={1}>{lastActivity}</Text>
                 </View>
 
-            </View>
-
-            <View style={styles.rightSection}>
-
-                {
-                    miBalance === 0 ? (
-
-                        <Text style={styles.balanceNeutral}>
-                            Sin balances
-                        </Text>
-
+                {/* Balance */}
+                <View style={styles.balanceCol}>
+                    {neutral ? (
+                        <View style={styles.neutralPill}>
+                            <Text style={styles.neutralText}>Al día</Text>
+                        </View>
                     ) : (
-
                         <>
-
-                            <Text
-                                style={[
-                                    styles.amount,
-                                    {
-                                        color:
-                                            miBalance > 0
-                                                ? "#10B981"
-                                                : "#EF4444"
-                                    }
-                                ]}
-                            >
-
-                                {
-                                    miBalance > 0
-                                        ? `+S/ ${Math.abs(miBalance)}`
-                                        : `-S/ ${Math.abs(miBalance)}`
-                                }
-
+                            <Text style={[styles.amount, { color: positivo ? "#10B981" : "#EF4444" }]}>
+                                {positivo ? "+" : "-"}S/ {Math.abs(miBalance).toFixed(2)}
                             </Text>
-
-                            <Text style={styles.status}>
-
-                                {
-                                    miBalance > 0
-                                        ? "Recibes"
-                                        : "Debes"
-                                }
-
-                            </Text>
-
+                            <View style={[styles.statusPill, { backgroundColor: positivo ? "#DCFCE7" : "#FEE2E2" }]}>
+                                <Text style={[styles.statusPillText, { color: positivo ? "#059669" : "#DC2626" }]}>
+                                    {positivo ? "Recibes" : "Debes"}
+                                </Text>
+                            </View>
                         </>
+                    )}
+                </View>
 
-                    )
-                }
-
-            </View>
-
-        </TouchableOpacity>
+                <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+            </TouchableOpacity>
+        </Animated.View>
     );
 }
 
 const styles = StyleSheet.create({
-
     card: {
-        backgroundColor: COLORS.white,
-        borderRadius: 24,
-        padding: 18,
-        marginBottom: 16,
-
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-
-        shadowColor: "#000",
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-
-        elevation: 2,
+        backgroundColor: "#FFFFFF",
+        borderRadius: 22, paddingHorizontal: 16, paddingVertical: 14,
+        marginBottom: 12, flexDirection: "row", alignItems: "center",
+        borderWidth: 1, borderColor: "#F1F5F9", gap: 12,
+        shadowColor: "#94A3B8", shadowOpacity: 0.08,
+        shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 2,
     },
-
-    leftSection: {
-        flexDirection: "row",
-        flex: 1,
-        alignItems: "center",
+    avatar: {
+        width: 54, height: 54, borderRadius: 18,
+        justifyContent: "center", alignItems: "center",
+        position: "relative", flexShrink: 0,
     },
-
-    iconContainer: {
-        width: 58,
-        height: 58,
-        borderRadius: 18,
-
-        justifyContent: "center",
-        alignItems: "center",
-
-        marginRight: 14,
+    avatarText: { fontSize: 20, fontWeight: "800", color: "#FFFFFF" },
+    emojiOverlay: {
+        position: "absolute", bottom: -4, right: -4,
+        width: 22, height: 22, borderRadius: 7,
+        backgroundColor: "#FFFFFF", justifyContent: "center", alignItems: "center",
+        borderWidth: 1.5, borderColor: "#F1F5F9",
     },
-
-    icon: {
-        fontSize: 24,
+    info: { flex: 1 },
+    name: { fontSize: 16, fontWeight: "700", color: COLORS.text, letterSpacing: -0.2 },
+    activity: { marginTop: 4, fontSize: 12, color: "#94A3B8", fontWeight: "500" },
+    balanceCol: { alignItems: "flex-end", gap: 4, flexShrink: 0 },
+    amount: { fontSize: 17, fontWeight: "800", letterSpacing: -0.4 },
+    statusPill: {
+        paddingHorizontal: 8, paddingVertical: 3,
+        borderRadius: 999, alignSelf: "flex-end",
     },
-
-    infoContainer: {
-        flex: 1,
+    statusPillText: { fontSize: 11, fontWeight: "700" },
+    neutralPill: {
+        paddingHorizontal: 10, paddingVertical: 5,
+        borderRadius: 999, backgroundColor: "#F1F5F9",
     },
-
-    name: {
-        fontSize: 19,
-        fontWeight: "700",
-        color: COLORS.text,
-    },
-
-    activity: {
-        marginTop: 6,
-        color: COLORS.subtitle,
-        fontSize: 14,
-    },
-
-    rightSection: {
-        alignItems: "flex-end",
-        justifyContent: "center",
-        marginLeft: 12,
-    },
-
-    amount: {
-        fontSize: 22,
-        fontWeight: "bold",
-    },
-
-    status: {
-        marginTop: 4,
-        color: COLORS.subtitle,
-        fontSize: 13,
-    },
-
-    emptyText: {
-        color: COLORS.subtitle,
-        fontSize: 13,
-        textAlign: "right",
-        maxWidth: 100,
-        lineHeight: 18,
-    },
-
-    balanceText: {
-        fontSize: 13,
-        fontWeight: "700",
-        marginTop: 6,
-    },
-
-    balanceNeutral: {
-        fontSize: 13,
-        color: COLORS.subtitle,
-        marginTop: 6,
-    },
+    neutralText: { fontSize: 12, fontWeight: "600", color: "#94A3B8" },
 });

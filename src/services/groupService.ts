@@ -3,6 +3,7 @@ import { api } from "./api";
 export interface CreateGroupRequest {
     nombre: string;
     descripcion?: string;
+    color?: string;
 }
 
 export const getMyGroups = async () => {
@@ -20,6 +21,19 @@ export const createGroup = async (
 
     const response = await api.post(
         "/grupos",
+        data
+    );
+
+    return response.data;
+};
+
+export const updateGroup = async (
+    groupId: number,
+    data: CreateGroupRequest
+) => {
+
+    const response = await api.put(
+        `/grupos/${groupId}`,
         data
     );
 
@@ -71,7 +85,17 @@ export const deleteGroup = async (
 
     return response.data;
 };
+export const leaveGroup = async (
+    groupId: number
+) => {
 
+    const response =
+        await api.delete(
+            `/grupos/${groupId}/salir`
+        );
+
+    return response.data;
+};
 export const getDashboardBalance =
     async () => {
 
@@ -82,3 +106,16 @@ export const getDashboardBalance =
 
         return response.data;
     };
+
+export const makeAdmin = async (
+    groupId: number,
+    userId: number
+) => {
+
+    const response =
+        await api.put(
+            `/grupos/${groupId}/usuarios/${userId}/admin`
+        );
+
+    return response.data;
+};

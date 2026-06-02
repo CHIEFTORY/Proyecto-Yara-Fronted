@@ -24,6 +24,7 @@ import {
 import {
     COLORS,
 } from "@/src/styles/colors";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 import { useAppRefresh } from "@/src/utils/appEvents";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -183,6 +184,7 @@ export default function PaymentsScreen() {
     return (
         <View style={styles.root}>
             <StatusBar barStyle="light-content" />
+            <AmbientScreenBackground intensity="medium" />
 
             {/* Header premium con gradiente */}
             <View style={styles.header}>

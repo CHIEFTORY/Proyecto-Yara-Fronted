@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { router } from "expo-router";
 import { COLORS } from "@/src/styles/colors";
 import { getProfile, updateProfile } from "@/src/services/userService";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 
 const P = {
     bg:          "#F8FAFC",
@@ -168,19 +169,24 @@ export default function EditProfileScreen() {
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={P.primary} />
+            <View style={styles.root}>
+                <AmbientScreenBackground />
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={P.primary} />
+                </View>
             </View>
         );
     }
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={{ paddingBottom: 60 }}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-        >
+        <View style={styles.root}>
+            <AmbientScreenBackground />
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={{ paddingBottom: 60 }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
             {/* ── HEADER ── */}
             <View style={styles.header}>
                 <TouchableOpacity
@@ -265,13 +271,15 @@ export default function EditProfileScreen() {
                 </TouchableOpacity>
             </Animated.View>
 
-        </ScrollView>
+            </ScrollView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: P.bg, paddingHorizontal: 22 },
-    loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: P.bg },
+    root: { flex: 1, backgroundColor: "#F0F4FF" },
+    container: { flex: 1, paddingHorizontal: 22 },
+    loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 
     header: {
         flexDirection: "row", alignItems: "flex-start",

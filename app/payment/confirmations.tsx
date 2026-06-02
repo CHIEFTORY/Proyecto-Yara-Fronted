@@ -19,6 +19,7 @@ import {
 } from "react";
 
 import { COLORS } from "@/src/styles/colors";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 import {
     confirmPayment,
     rejectPayment,
@@ -163,6 +164,7 @@ export default function ConfirmationsScreen() {
     return (
         <View style={styles.root}>
             <StatusBar barStyle="light-content" />
+            <AmbientScreenBackground intensity="medium" />
 
             {/* Header */}
             <View style={styles.header}>

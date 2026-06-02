@@ -150,14 +150,14 @@ const styles = StyleSheet.create({
         color: "rgba(255,255,255,0.62)",
         fontSize: 11,
         fontWeight: "900",
-        letterSpacing: 1.4,
+        letterSpacing: 0,
         marginBottom: 6,
     },
     balance: {
         color: "#FFFFFF",
         fontSize: 38,
         fontWeight: "900",
-        letterSpacing: -1,
+        letterSpacing: 0,
     },
     statusBadge: {
         minHeight: 32,
@@ -243,6 +243,6 @@ const styles = StyleSheet.create({
     metricValue: {
         fontSize: 17,
         fontWeight: "900",
-        letterSpacing: -0.2,
+        letterSpacing: 0,
     },
 });

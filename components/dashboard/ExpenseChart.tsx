@@ -71,7 +71,7 @@ export default function ExpenseChart() {
                         labels: chartData.map(d => d.mes),
                         datasets: [{ data: chartData.map(d => d.total || 0) }],
                     }}
-                    width={screenWidth - 80}
+                    width={screenWidth - 84}
                     height={220}
                     yAxisLabel="S/ "
                     yAxisSuffix=""
@@ -97,29 +97,36 @@ export default function ExpenseChart() {
 const styles = StyleSheet.create({
     card: {
         backgroundColor: "#FFFFFF",
-        borderRadius: 26, padding: 22, marginBottom: 20,
-        borderWidth: 1, borderColor: "#F1F5F9",
-        shadowColor: "#94A3B8", shadowOpacity: 0.08,
-        shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 3,
+        borderRadius: 26,
+        padding: 22,
+        marginHorizontal: 20,
+        marginBottom: 24,
+        borderWidth: 1,
+        borderColor: "#F1F5F9",
+        shadowColor: "#94A3B8",
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 3,
     },
     header: {
         flexDirection: "row", justifyContent: "space-between",
         alignItems: "flex-start", marginBottom: 12,
     },
     eyebrow: {
-        fontSize: 11, fontWeight: "700", letterSpacing: 2,
+        fontSize: 11, fontWeight: "700", letterSpacing: 0,
         color: COLORS.primary, opacity: 0.5, marginBottom: 2,
     },
     title: {
         fontSize: 20, fontWeight: "800",
-        color: COLORS.text, letterSpacing: -0.5,
+        color: COLORS.text, letterSpacing: 0,
     },
     totalPill: {
         backgroundColor: "#EEF2FF", borderRadius: 14,
         paddingHorizontal: 14, paddingVertical: 8, alignItems: "flex-end",
     },
-    totalLabel: { fontSize: 10, fontWeight: "600", color: "#6366F1", letterSpacing: 0.5 },
-    totalAmount: { fontSize: 16, fontWeight: "800", color: "#4F46E5", letterSpacing: -0.3 },
+    totalLabel: { fontSize: 10, fontWeight: "600", color: "#6366F1", letterSpacing: 0 },
+    totalAmount: { fontSize: 16, fontWeight: "800", color: "#4F46E5", letterSpacing: 0 },
     peakRow: {
         flexDirection: "row",
         alignItems: "center",

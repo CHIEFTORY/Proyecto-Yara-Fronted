@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { COLORS } from "@/src/styles/colors";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 
 const FAQS = [
     {
@@ -72,6 +73,7 @@ export default function HelpSupportScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            <AmbientScreenBackground />
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.backButton}

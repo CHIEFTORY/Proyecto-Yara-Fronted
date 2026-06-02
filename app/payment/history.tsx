@@ -15,6 +15,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { getPaymentHistory } from "@/src/services/paymentDebtService";
 import { COLORS } from "@/src/styles/colors";
 import { useAppRefresh } from "@/src/utils/appEvents";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 
 const STATUS_STYLES: Record<string, { label: string; color: string; bg: string; icon: keyof typeof Ionicons.glyphMap }> = {
     CONFIRMADO: { label: "Confirmado", color: "#15803D", bg: "#DCFCE7", icon: "checkmark-circle" },
@@ -86,10 +87,32 @@ export default function PaymentHistoryScreen() {
         }),
         [groupFilter, payments, statusFilter]
     );
+    const groupedVisiblePayments = useMemo(() => {
+        const groups = new Map<string, { label: string; order: number; items: any[] }>();
+
+        [...visiblePayments]
+            .sort((a, b) => getDateTime(b.fecha) - getDateTime(a.fecha))
+            .forEach((payment) => {
+                const dateGroup = getDateGroup(payment.fecha);
+                const current = groups.get(dateGroup.key) || {
+                    label: dateGroup.label,
+                    order: dateGroup.order,
+                    items: [],
+                };
+
+                current.items.push(payment);
+                groups.set(dateGroup.key, current);
+            });
+
+        return Array.from(groups.values())
+            .sort((a, b) => a.order - b.order)
+            .map(({ label, items }) => ({ label, items }));
+    }, [visiblePayments]);
 
     return (
         <SafeAreaView style={styles.safe}>
             <StatusBar barStyle="light-content" />
+            <AmbientScreenBackground />
 
             <View style={styles.header}>
                 <TouchableOpacity
@@ -224,67 +247,72 @@ export default function PaymentHistoryScreen() {
                     </View>
                 ) : (
                     <View style={styles.list}>
-                        {visiblePayments.map((payment) => {
-                            const status = STATUS_STYLES[payment.estado] || {
-                                label: payment.estado || "Pago",
-                                color: "#475569",
-                                bg: "#E2E8F0",
-                                icon: "ellipse" as keyof typeof Ionicons.glyphMap,
-                            };
+                        {groupedVisiblePayments.map((group) => (
+                            <View key={group.label} style={styles.dateGroup}>
+                                <Text style={styles.dateGroupTitle}>{group.label}</Text>
+                                {group.items.map((payment) => {
+                                    const status = STATUS_STYLES[payment.estado] || {
+                                        label: payment.estado || "Pago",
+                                        color: "#475569",
+                                        bg: "#E2E8F0",
+                                        icon: "ellipse" as keyof typeof Ionicons.glyphMap,
+                                    };
 
-                            return (
-                                <TouchableOpacity
-                                    key={payment.id}
-                                    style={styles.receiptCard}
-                                    onPress={() => {
-                                        router.push({
-                                            pathname: "/payment/receipt",
-                                            params: {
-                                                paymentId: String(payment.id),
-                                                ...(shouldReturnToDashboard
-                                                    ? { returnTo: "historyDashboard" }
-                                                    : shouldReturnToActivity
-                                                        ? { returnTo: "activity" }
-                                                        : { returnTo: "history" }),
-                                            },
-                                        });
-                                    }}
-                                    activeOpacity={0.8}
-                                >
-                                    <View style={styles.receiptTop}>
-                                        <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
-                                            <Ionicons name={status.icon} size={14} color={status.color} />
-                                            <Text style={[styles.statusText, { color: status.color }]}>
-                                                {status.label}
-                                            </Text>
-                                        </View>
-                                        <Text style={styles.receiptDate}>{formatDate(payment.fecha)}</Text>
-                                    </View>
+                                    return (
+                                        <TouchableOpacity
+                                            key={payment.id}
+                                            style={styles.receiptCard}
+                                            onPress={() => {
+                                                router.push({
+                                                    pathname: "/payment/receipt",
+                                                    params: {
+                                                        paymentId: String(payment.id),
+                                                        ...(shouldReturnToDashboard
+                                                            ? { returnTo: "historyDashboard" }
+                                                            : shouldReturnToActivity
+                                                                ? { returnTo: "activity" }
+                                                                : { returnTo: "history" }),
+                                                    },
+                                                });
+                                            }}
+                                            activeOpacity={0.8}
+                                        >
+                                            <View style={styles.receiptTop}>
+                                                <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
+                                                    <Ionicons name={status.icon} size={14} color={status.color} />
+                                                    <Text style={[styles.statusText, { color: status.color }]}>
+                                                        {status.label}
+                                                    </Text>
+                                                </View>
+                                                <Text style={styles.receiptDate}>{formatDate(payment.fecha)}</Text>
+                                            </View>
 
-                                    <View style={styles.receiptBody}>
-                                        <View style={styles.methodIcon}>
-                                            <Ionicons name={methodIcon(payment.metodoTransferencia)} size={20} color={COLORS.primary} />
-                                        </View>
-                                        <View style={styles.receiptInfo}>
-                                            <Text style={styles.receiptTitle}>
-                                                {payment.deudor} pago a {payment.acreedor}
-                                            </Text>
-                                            <Text style={styles.receiptMeta}>
-                                                {payment.grupoNombre || "Grupo"} - {payment.metodoPago || "Transferencia"}
-                                            </Text>
-                                        </View>
-                                        <Text style={styles.receiptAmount}>
-                                            S/ {Number(payment.monto || 0).toFixed(2)}
-                                        </Text>
-                                    </View>
+                                            <View style={styles.receiptBody}>
+                                                <View style={styles.methodIcon}>
+                                                    <Ionicons name={methodIcon(payment.metodoTransferencia)} size={20} color={COLORS.primary} />
+                                                </View>
+                                                <View style={styles.receiptInfo}>
+                                                    <Text style={styles.receiptTitle}>
+                                                        {payment.deudor} pago a {payment.acreedor}
+                                                    </Text>
+                                                    <Text style={styles.receiptMeta}>
+                                                        {payment.grupoNombre || "Grupo"} - {payment.metodoPago || "Transferencia"}
+                                                    </Text>
+                                                </View>
+                                                <Text style={styles.receiptAmount}>
+                                                    S/ {Number(payment.monto || 0).toFixed(2)}
+                                                </Text>
+                                            </View>
 
-                                    <View style={styles.receiptFooter}>
-                                        <Text style={styles.receiptCode}>Recibo #{payment.id}</Text>
-                                        <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
-                                    </View>
-                                </TouchableOpacity>
-                            );
-                        })}
+                                            <View style={styles.receiptFooter}>
+                                                <Text style={styles.receiptCode}>Recibo #{payment.id}</Text>
+                                                <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        ))}
                     </View>
                 )}
             </ScrollView>
@@ -308,7 +336,54 @@ function formatDate(value?: string) {
         day: "2-digit",
         month: "short",
         year: "numeric",
+        timeZone: "America/Lima",
     });
+}
+
+function getDateGroup(value?: string) {
+    if (!value) return { key: "none", label: "Sin fecha", order: 9000000000000 };
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return { key: "none", label: "Sin fecha", order: 9000000000000 };
+
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    const paymentKey = getLimaDateKey(date);
+    const todayKey = getLimaDateKey(today);
+    const yesterdayKey = getLimaDateKey(yesterday);
+
+    if (paymentKey === todayKey) return { key: "today", label: "Hoy", order: 0 };
+    if (paymentKey === yesterdayKey) return { key: "yesterday", label: "Ayer", order: 1 };
+
+    const monthLabel = date.toLocaleDateString("es-PE", {
+        month: "long",
+        year: "numeric",
+        timeZone: "America/Lima",
+    });
+
+    return {
+        key: monthLabel,
+        label: monthLabel,
+        order: Math.max(2, 1000000000000 - getDateTime(value)),
+    };
+}
+
+function getDateTime(value?: string) {
+    if (!value) return 0;
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function getLimaDateKey(date: Date) {
+    return new Intl.DateTimeFormat("en-CA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone: "America/Lima",
+    }).format(date);
 }
 
 const styles = StyleSheet.create({
@@ -445,6 +520,16 @@ const styles = StyleSheet.create({
     },
     list: {
         gap: 12,
+    },
+    dateGroup: {
+        gap: 10,
+    },
+    dateGroupTitle: {
+        color: "#64748B",
+        fontSize: 12,
+        fontWeight: "900",
+        textTransform: "uppercase",
+        marginTop: 4,
     },
     receiptCard: {
         backgroundColor: "#FFFFFF",

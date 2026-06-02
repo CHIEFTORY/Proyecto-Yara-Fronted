@@ -34,6 +34,7 @@ import { COLORS } from "@/src/styles/colors";
 import { getGroupUsers } from "@/src/services/groupService";
 import { Ionicons } from "@expo/vector-icons";
 import { emitAppEvent } from "@/src/utils/appEvents";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 
 const AVATAR_COLORS = [
     { bg: "#DBEAFE", text: "#2563EB" },
@@ -277,6 +278,7 @@ export default function CreateExpenseScreen() {
             behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
             <StatusBar barStyle="light-content" />
+            <AmbientScreenBackground />
 
             {/* ── HEADER ── */}
             <View style={styles.header}>
@@ -332,7 +334,7 @@ export default function CreateExpenseScreen() {
                     </View>
 
                     <Text style={styles.label}>Monto total</Text>
-                    <View style={[styles.inputWrapper, amountFocused && styles.inputFocused]}>
+                    <View style={[styles.inputWrapper, styles.amountInputWrapper, amountFocused && styles.inputFocused]}>
                         <Text style={styles.currencyTag}>S/</Text>
                         <TextInput
                             placeholder="0.00"
@@ -451,6 +453,20 @@ export default function CreateExpenseScreen() {
                 {/* ── CARD: PARTICIPANTES ── */}
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>Participantes</Text>
+                    <View style={styles.participantsMeta}>
+                        <View style={styles.participantsMetaItem}>
+                            <Ionicons name="people-outline" size={15} color={COLORS.primary} />
+                            <Text style={styles.participantsMetaText}>
+                                {splitType === "IGUAL" ? selectedUsers.length : Object.values(customAmounts).filter(Boolean).length} incluidos
+                            </Text>
+                        </View>
+                        <View style={styles.participantsMetaItem}>
+                            <Ionicons name="git-branch-outline" size={15} color={COLORS.primary} />
+                            <Text style={styles.participantsMetaText}>
+                                {splitType === "IGUAL" ? "Division igual" : "Division manual"}
+                            </Text>
+                        </View>
+                    </View>
                     {splitType === "PERSONALIZADO" && (
                         <Text style={styles.cardSubtitle}>
                             Ingresa cuánto debe cada persona. Deja vacío para excluirla.
@@ -785,6 +801,17 @@ const styles = StyleSheet.create({
         backgroundColor: "#EFF6FF",
     },
 
+    amountInputWrapper: {
+        minHeight: 72,
+        backgroundColor: "#F8FBFF",
+        borderColor: "#BFDBFE",
+        shadowColor: COLORS.primary,
+        shadowOpacity: 0.06,
+        shadowOffset: { width: 0, height: 6 },
+        shadowRadius: 14,
+        elevation: 2,
+    },
+
     inputIcon: {
         fontSize: 16,
     },
@@ -804,7 +831,7 @@ const styles = StyleSheet.create({
     },
 
     amountInput: {
-        fontSize: 22,
+        fontSize: 30,
         fontWeight: "800",
         color: "#1E293B",
     },
@@ -937,6 +964,30 @@ const styles = StyleSheet.create({
     userRowSelected: {
         backgroundColor: "#EFF6FF",
         borderColor: "#BFDBFE",
+    },
+
+    participantsMeta: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 8,
+        marginTop: 10,
+        marginBottom: 12,
+    },
+
+    participantsMetaItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        backgroundColor: "#EEF2FF",
+        borderRadius: 999,
+        paddingHorizontal: 11,
+        paddingVertical: 7,
+    },
+
+    participantsMetaText: {
+        color: "#475569",
+        fontSize: 12,
+        fontWeight: "800",
     },
 
     userLeft: {

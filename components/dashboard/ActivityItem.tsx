@@ -79,11 +79,11 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 15, fontWeight: "700", color: COLORS.text,
-        flex: 1, lineHeight: 22, letterSpacing: -0.1,
+        flex: 1, lineHeight: 22, letterSpacing: 0,
     },
     amount: {
         fontSize: 16, fontWeight: "800",
-        letterSpacing: -0.3, flexShrink: 0,
+        letterSpacing: 0, flexShrink: 0,
     },
     subtitle: {
         marginTop: 4, fontSize: 13,

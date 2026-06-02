@@ -36,7 +36,8 @@ export default function QuickAction({
 
 const styles = StyleSheet.create({
     button: {
-        width: 118,
+        flexBasis: "47%",
+        flexGrow: 1,
         minHeight: 92,
         borderRadius: 22,
         paddingVertical: 14,

@@ -14,6 +14,7 @@ import { useState, useRef, useEffect } from "react";
 import { router } from "expo-router";
 import { COLORS } from "@/src/styles/colors";
 import { changePassword } from "@/src/services/userService";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 
 const P = {
     bg:          "#F8FAFC",
@@ -188,12 +189,14 @@ export default function ChangePasswordScreen() {
     const onPressOut = () => Animated.spring(scaleBtn, { toValue: 1, friction: 4, useNativeDriver: true }).start();
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={{ paddingBottom: 60 }}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-        >
+        <View style={styles.root}>
+            <AmbientScreenBackground />
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={{ paddingBottom: 60 }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
             {/* ── HEADER ── */}
             <View style={styles.header}>
                 <TouchableOpacity
@@ -291,12 +294,14 @@ export default function ChangePasswordScreen() {
                 </TouchableOpacity>
             </Animated.View>
 
-        </ScrollView>
+            </ScrollView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: P.bg, paddingHorizontal: 22 },
+    root: { flex: 1, backgroundColor: "#F0F4FF" },
+    container: { flex: 1, paddingHorizontal: 22 },
 
     header: {
         flexDirection: "row",

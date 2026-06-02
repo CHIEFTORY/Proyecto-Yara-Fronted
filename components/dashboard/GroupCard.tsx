@@ -49,7 +49,7 @@ export default function GroupCard({ name, lastActivity, miBalance, color, onPres
                 <View style={styles.balanceCol}>
                     {neutral ? (
                         <View style={styles.neutralPill}>
-                            <Text style={styles.neutralText}>Al día</Text>
+                            <Text style={styles.neutralText}>Al dia</Text>
                         </View>
                     ) : (
                         <>
@@ -93,10 +93,10 @@ const styles = StyleSheet.create({
         borderWidth: 1.5, borderColor: "#F1F5F9",
     },
     info: { flex: 1 },
-    name: { fontSize: 16, fontWeight: "700", color: COLORS.text, letterSpacing: -0.2 },
+    name: { fontSize: 16, fontWeight: "700", color: COLORS.text, letterSpacing: 0 },
     activity: { marginTop: 4, fontSize: 12, color: "#94A3B8", fontWeight: "500" },
     balanceCol: { alignItems: "flex-end", gap: 4, flexShrink: 0 },
-    amount: { fontSize: 17, fontWeight: "800", letterSpacing: -0.4 },
+    amount: { fontSize: 17, fontWeight: "800", letterSpacing: 0 },
     statusPill: {
         paddingHorizontal: 8, paddingVertical: 3,
         borderRadius: 999, alignSelf: "flex-end",

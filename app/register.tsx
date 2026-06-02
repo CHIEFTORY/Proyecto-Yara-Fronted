@@ -18,6 +18,7 @@ import {
 import { router } from "expo-router";
 import { COLORS } from "@/src/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 
 type FieldKey = "nombre" | "email" | "telefono" | "password" | "confirmPassword";
 
@@ -109,8 +110,7 @@ export default function RegisterScreen() {
             <StatusBar barStyle="dark-content" />
 
             {/* Círculos decorativos de fondo */}
-            <View style={styles.bgCircle1} />
-            <View style={styles.bgCircle2} />
+            <AmbientScreenBackground intensity="medium" />
 
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
@@ -311,26 +311,6 @@ const styles = StyleSheet.create({
         backgroundColor: "#F0F4FF",
     },
 
-    bgCircle1: {
-        position: "absolute",
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        backgroundColor: "rgba(37,99,235,0.06)",
-        top: -100,
-        right: -80,
-    },
-
-    bgCircle2: {
-        position: "absolute",
-        width: 180,
-        height: 180,
-        borderRadius: 90,
-        backgroundColor: "rgba(124,58,237,0.05)",
-        bottom: 60,
-        left: -50,
-    },
-
     scroll: {
         paddingHorizontal: 24,
         paddingVertical: 32,
@@ -343,34 +323,32 @@ const styles = StyleSheet.create({
     },
 
     logoShadow: {
-        shadowColor: COLORS.primary,
-        shadowOpacity: 0.3,
-        shadowOffset: { width: 0, height: 10 },
-        shadowRadius: 20,
-        elevation: 10,
         marginBottom: 20,
     },
 
     logo: {
         width: 74,
         height: 74,
-        borderRadius: 24,
+        borderRadius: 26,
         backgroundColor: COLORS.primary,
         justifyContent: "center",
         alignItems: "center",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.34)",
+        overflow: "hidden",
     },
 
     logoText: {
         color: "#FFFFFF",
         fontSize: 32,
-        fontWeight: "800",
+        fontWeight: "900",
     },
 
     title: {
         fontSize: 28,
         fontWeight: "800",
         color: "#1E293B",
-        letterSpacing: -0.5,
+        letterSpacing: 0,
         marginBottom: 6,
     },
 

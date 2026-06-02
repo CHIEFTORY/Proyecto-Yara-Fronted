@@ -21,6 +21,7 @@ import {
     ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 
 export default function LoginScreen() {
 
@@ -101,10 +102,7 @@ export default function LoginScreen() {
         <SafeAreaView style={styles.root}>
             <StatusBar barStyle="dark-content" />
 
-            {/* Fondo con formas decorativas */}
-            <View style={styles.bgCircle1} />
-            <View style={styles.bgCircle2} />
-            <View style={styles.bgCircle3} />
+            <AmbientScreenBackground intensity="medium" />
 
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
@@ -177,7 +175,7 @@ export default function LoginScreen() {
                             ]}>
                                 <Ionicons name="lock-closed-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
                                 <TextInput
-                                    placeholder="••••••••"
+                                    placeholder="Contraseña"
                                     placeholderTextColor="#CBD5E1"
                                     secureTextEntry={!showPassword}
                                     style={styles.input}
@@ -251,37 +249,6 @@ const styles = StyleSheet.create({
         backgroundColor: "#F0F4FF",
     },
 
-    /* Decoraciones de fondo */
-    bgCircle1: {
-        position: "absolute",
-        width: 320,
-        height: 320,
-        borderRadius: 160,
-        backgroundColor: "rgba(37,99,235,0.07)",
-        top: -100,
-        right: -80,
-    },
-
-    bgCircle2: {
-        position: "absolute",
-        width: 200,
-        height: 200,
-        borderRadius: 100,
-        backgroundColor: "rgba(124,58,237,0.05)",
-        bottom: 80,
-        left: -60,
-    },
-
-    bgCircle3: {
-        position: "absolute",
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: "rgba(22,163,74,0.05)",
-        top: 200,
-        left: 20,
-    },
-
     scroll: {
         flexGrow: 1,
         justifyContent: "center",
@@ -296,34 +263,32 @@ const styles = StyleSheet.create({
     },
 
     logoShadow: {
-        shadowColor: COLORS.primary,
-        shadowOpacity: 0.35,
-        shadowOffset: { width: 0, height: 10 },
-        shadowRadius: 20,
-        elevation: 10,
         marginBottom: 22,
     },
 
     logo: {
         width: 76,
         height: 76,
-        borderRadius: 24,
+        borderRadius: 26,
         backgroundColor: COLORS.primary,
         justifyContent: "center",
         alignItems: "center",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.34)",
+        overflow: "hidden",
     },
 
     logoText: {
         color: "#FFFFFF",
         fontSize: 34,
-        fontWeight: "800",
+        fontWeight: "900",
     },
 
     title: {
         fontSize: 30,
         fontWeight: "800",
         color: "#1E293B",
-        letterSpacing: -0.5,
+        letterSpacing: 0,
         marginBottom: 8,
     },
 

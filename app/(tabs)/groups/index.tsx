@@ -22,6 +22,7 @@ import { COLORS } from "@/src/styles/colors";
 import { getMyGroups } from "@/src/services/groupService";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppRefresh } from "@/src/utils/appEvents";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 
 // ─── Paleta navy premium ───────────────────────────────────────────────────────
 const NAVY   = "#0F1F5C";
@@ -77,6 +78,7 @@ export default function GroupsScreen() {
     return (
         <View style={styles.root}>
             <StatusBar barStyle="dark-content" />
+            <AmbientScreenBackground />
 
             <ScrollView
                 style={styles.container}

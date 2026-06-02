@@ -99,3 +99,16 @@ export const savePushToken =
             }
         );
     };
+
+export const removePushToken =
+    async (token: string) => {
+
+        await api.delete(
+            "/usuarios/push-token",
+            {
+                data: {
+                    token,
+                },
+            }
+        );
+    };

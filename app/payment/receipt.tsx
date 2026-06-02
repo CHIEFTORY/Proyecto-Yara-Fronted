@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { getPaymentHistory } from "@/src/services/paymentDebtService";
 import { COLORS } from "@/src/styles/colors";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 
 const STATUS: Record<string, { label: string; color: string; bg: string; icon: keyof typeof Ionicons.glyphMap }> = {
     CONFIRMADO: { label: "Pago confirmado", color: "#15803D", bg: "#DCFCE7", icon: "checkmark-circle" },
@@ -78,6 +79,7 @@ export default function ReceiptScreen() {
     return (
         <SafeAreaView style={styles.safe}>
             <StatusBar barStyle="light-content" />
+            <AmbientScreenBackground />
 
             <View style={styles.header}>
                 <TouchableOpacity style={styles.headerButton} onPress={handleBack}>

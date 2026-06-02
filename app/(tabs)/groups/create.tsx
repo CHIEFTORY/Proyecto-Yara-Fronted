@@ -17,6 +17,7 @@ import { COLORS } from "@/src/styles/colors";
 import { createGroup, updateGroup } from "@/src/services/groupService";
 import { Ionicons } from "@expo/vector-icons";
 import { useToast } from "@/src/context/ToastContext";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 
 const GROUP_COLORS = [
     { hex: "#2563EB", label: "Azul" },
@@ -107,6 +108,7 @@ export default function CreateGroupScreen() {
     return (
         <SafeAreaView style={styles.root}>
             <StatusBar barStyle="light-content" />
+            <AmbientScreenBackground />
 
             {/* ── HEADER ── */}
             <View style={[styles.header, { backgroundColor: selectedColor }]}>

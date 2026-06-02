@@ -40,6 +40,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRelativeTimeTick } from "@/src/hooks/useRelativeTimeTick";
 import { useToast } from "@/src/context/ToastContext";
 import { emitAppEvent, useAppRefresh } from "@/src/utils/appEvents";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 
 import {
     getGroupSummary,
@@ -217,6 +218,7 @@ export default function GroupDetailScreen() {
     return (
         <View style={styles.root}>
             <StatusBar barStyle="light-content" />
+            <AmbientScreenBackground intensity="medium" />
 
             <ScrollView
                 style={styles.container}

@@ -29,6 +29,7 @@ import {
 import {
     COLORS,
 } from "@/src/styles/colors";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 
 import {
     getProfile,
@@ -39,6 +40,12 @@ import {
 import {
     removeToken,
 } from "@/src/utils/authStorage";
+import {
+    removePushToken,
+} from "@/src/services/notificationService";
+import {
+    registerForPushNotifications,
+} from "@/src/utils/pushNotifications";
 
 export default function ProfileScreen() {
     const navigation = useNavigation();
@@ -81,6 +88,14 @@ export default function ProfileScreen() {
                     text: "Salir",
                     style: "destructive",
                     onPress: async () => {
+                        try {
+                            const pushToken = await registerForPushNotifications();
+                            if (pushToken) {
+                                await removePushToken(pushToken);
+                            }
+                        } catch (error) {
+                            console.log(error);
+                        }
                         await removeToken();
                         navigation.dispatch(
                             CommonActions.reset({
@@ -110,6 +125,7 @@ export default function ProfileScreen() {
     return (
         <View style={styles.root}>
             <StatusBar barStyle="light-content" />
+            <AmbientScreenBackground intensity="medium" />
 
             <ScrollView
                 style={styles.container}

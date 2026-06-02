@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { COLORS } from "@/src/styles/colors";
+import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 import {
     createCollectionMethod,
     deleteCollectionMethod,
@@ -214,6 +215,7 @@ export default function CollectionMethodsScreen() {
     return (
         <SafeAreaView style={styles.safe}>
             <StatusBar barStyle="light-content" />
+            <AmbientScreenBackground />
 
             {/* ── Header (sin expo-linear-gradient) ── */}
             <View style={styles.headerGradient}>

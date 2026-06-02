@@ -26,6 +26,7 @@ import {
 import { api } from "@/src/services/api";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { emitAppEvent, useAppRefresh } from "@/src/utils/appEvents";
 
 const AVATAR_COLORS = [
     { bg: "#DBEAFE", text: "#2563EB" },
@@ -93,10 +94,13 @@ export default function ConfirmationsScreen() {
         loadData();
     }, [loadData]);
 
+    useAppRefresh(["payments", "activity"], loadData);
+
     const handleConfirm = async (paymentId: number, deudor: string, monto: number) => {
         if (Platform.OS === "web") {
             try {
                 await confirmPayment(paymentId);
+                emitAppEvent("payments", "activity", "badge", "dashboard", "group");
                 loadData();
             } catch {
                 Alert.alert("Error", "No se pudo confirmar el pago.");
@@ -114,6 +118,7 @@ export default function ConfirmationsScreen() {
                     onPress: async () => {
                         try {
                             await confirmPayment(paymentId);
+                            emitAppEvent("payments", "activity", "badge", "dashboard", "group");
                             Alert.alert("Confirmado", "El pago fue registrado como recibido.");
                             loadData();
                         } catch {
@@ -129,6 +134,7 @@ export default function ConfirmationsScreen() {
         const runReject = async () => {
             try {
                 await rejectPayment(paymentId);
+                emitAppEvent("payments", "activity", "badge", "dashboard", "group");
                 loadData();
             } catch {
                 Alert.alert("Error", "No se pudo rechazar el pago.");

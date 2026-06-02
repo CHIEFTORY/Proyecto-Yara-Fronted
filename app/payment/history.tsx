@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { getPaymentHistory } from "@/src/services/paymentDebtService";
 import { COLORS } from "@/src/styles/colors";
+import { useAppRefresh } from "@/src/utils/appEvents";
 
 const STATUS_STYLES: Record<string, { label: string; color: string; bg: string; icon: keyof typeof Ionicons.glyphMap }> = {
     CONFIRMADO: { label: "Confirmado", color: "#15803D", bg: "#DCFCE7", icon: "checkmark-circle" },
@@ -50,6 +51,8 @@ export default function PaymentHistoryScreen() {
     useEffect(() => {
         loadHistory();
     }, [loadHistory]);
+
+    useAppRefresh(["payments"], loadHistory);
 
     const onRefresh = () => {
         setRefreshing(true);

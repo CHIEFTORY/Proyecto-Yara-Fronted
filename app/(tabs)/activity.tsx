@@ -38,6 +38,7 @@ import {
 } from "@/src/utils/time";
 import { useRelativeTimeTick } from "@/src/hooks/useRelativeTimeTick";
 import { useToast } from "@/src/context/ToastContext";
+import { emitAppEvent, useAppRefresh } from "@/src/utils/appEvents";
 
 import {
     getNotifications,
@@ -138,16 +139,7 @@ export default function ActivityPage() {
         .filter((notification) => activityView === "ALL" || !notification.leido)
         .sort((a, b) => Number(a.leido) - Number(b.leido));
 
-    useFocusEffect(
-        React.useCallback(() => {
-            if (tab === "requests") {
-                setActiveTab("REQUESTS");
-            }
-            loadData();
-        }, [tab])
-    );
-
-    const loadData = async () => {
+    const loadData = React.useCallback(async () => {
         try {
             const [notificationsData, invitationsData] = await Promise.all([
                 getNotifications(),
@@ -161,7 +153,18 @@ export default function ActivityPage() {
             setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, []);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            if (tab === "requests") {
+                setActiveTab("REQUESTS");
+            }
+            loadData();
+        }, [loadData, tab])
+    );
+
+    useAppRefresh(["activity", "badge"], loadData);
 
     const handleRefresh = async () => {
         setRefreshing(true);
@@ -178,6 +181,7 @@ export default function ActivityPage() {
             setNotifications((cur) =>
                 cur.map((n) => n.id === item.id ? { ...n, leido: true } : n)
             );
+            emitAppEvent("badge", "dashboard");
         } catch (error) {
             console.log(error);
             toast.showToast({
@@ -195,6 +199,7 @@ export default function ActivityPage() {
         try {
             await markAllNotificationsAsRead();
             setNotifications((cur) => cur.map((n) => ({ ...n, leido: true })));
+            emitAppEvent("badge", "dashboard");
         } catch (error) {
             console.log(error);
             toast.showToast({
@@ -386,6 +391,7 @@ export default function ActivityPage() {
                                             onPress={async () => {
                                                 try {
                                                     await acceptInvitation(invitation.id);
+                                                    emitAppEvent("groups", "group", "dashboard", "badge", "activity");
                                                     await loadData();
                                                 } catch (error) {
                                                     console.log(error);
@@ -407,6 +413,7 @@ export default function ActivityPage() {
                                             onPress={async () => {
                                                 try {
                                                     await rejectInvitation(invitation.id);
+                                                    emitAppEvent("badge", "activity", "dashboard");
                                                     await loadData();
                                                 } catch (error) {
                                                     console.log(error);

@@ -39,6 +39,7 @@ import { COLORS } from "@/src/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useRelativeTimeTick } from "@/src/hooks/useRelativeTimeTick";
 import { useToast } from "@/src/context/ToastContext";
+import { emitAppEvent, useAppRefresh } from "@/src/utils/appEvents";
 
 import {
     getGroupSummary,
@@ -88,6 +89,7 @@ export default function GroupDetailScreen() {
                 onPress: async () => {
                     try {
                         await leaveGroup(Number(id));
+                        emitAppEvent("groups", "dashboard", "badge");
                         router.replace("/groups" as any);
                     } catch (error: any) {
                         Alert.alert(
@@ -121,6 +123,7 @@ export default function GroupDetailScreen() {
                 onPress: async () => {
                     try {
                         await deleteGroup(Number(id));
+                        emitAppEvent("groups", "dashboard", "badge");
                         router.replace("/groups" as any);
                     } catch (error) {
                         console.log(error);
@@ -144,6 +147,7 @@ export default function GroupDetailScreen() {
                     onPress: async () => {
                         try {
                             await deleteExpense(expenseId);
+                            emitAppEvent("group", "groups", "dashboard", "payments", "activity");
                             toast.showToast({
                                 type: "success",
                                 title: "Gasto eliminado",
@@ -194,6 +198,7 @@ export default function GroupDetailScreen() {
     }, [fadeAnim, id]);
 
     useFocusEffect(useCallback(() => { loadGroup(); }, [loadGroup]));
+    useAppRefresh(["group", "payments", "activity"], loadGroup);
 
     if (loading) {
         return (

@@ -2,6 +2,7 @@ import * as Device
     from "expo-device";
 import Constants from "expo-constants";
 import { router } from "expo-router";
+import { emitAppEvent } from "@/src/utils/appEvents";
 
 export const registerForPushNotifications =
     async () => {
@@ -61,7 +62,8 @@ export const setupPushNotificationNavigation = () => {
         return () => {};
     }
 
-    let subscription: { remove: () => void } | null = null;
+    let responseSubscription: { remove: () => void } | null = null;
+    let receivedSubscription: { remove: () => void } | null = null;
     let mounted = true;
 
     const setup = async () => {
@@ -78,7 +80,19 @@ export const setupPushNotificationNavigation = () => {
                 }),
             });
 
-            subscription =
+            receivedSubscription =
+                Notifications.addNotificationReceivedListener(() => {
+                    emitAppEvent(
+                        "activity",
+                        "badge",
+                        "dashboard",
+                        "group",
+                        "groups",
+                        "payments"
+                    );
+                });
+
+            responseSubscription =
                 Notifications.addNotificationResponseReceivedListener((response) => {
                     const data =
                         response.notification.request.content.data as {
@@ -87,6 +101,7 @@ export const setupPushNotificationNavigation = () => {
 
                     if (!mounted || !data?.route) return;
 
+                    emitAppEvent("activity", "badge", "dashboard", "payments", "group", "groups");
                     router.push(data.route as any);
                 });
 
@@ -108,6 +123,7 @@ export const setupPushNotificationNavigation = () => {
 
     return () => {
         mounted = false;
-        subscription?.remove();
+        responseSubscription?.remove();
+        receivedSubscription?.remove();
     };
 };

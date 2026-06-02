@@ -6,14 +6,19 @@ import {
     TouchableOpacity,
     StatusBar,
     Animated,
+    Image,
 } from "react-native";
 
 import { api } from "@/src/services/api";
 import { getToken } from "@/src/utils/authStorage";
-import { useCallback, useState, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { COLORS } from "@/src/styles/colors";
+
+const BRAND_DARK = "#082E74";
+const BRAND_BLUE = "#2563EB";
+const BRAND_SOFT = "#EAF2FF";
+const DANGER = "#EF4444";
 
 export default function ServerDownScreen() {
 
@@ -21,13 +26,15 @@ export default function ServerDownScreen() {
     const [attempts, setAttempts] = useState(0);
     const [nextRetry, setNextRetry] = useState(6);
 
-    const pulseAnim = useRef(new Animated.Value(1)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const cardY = useRef(new Animated.Value(22)).current;
+    const pulseAnim = useRef(new Animated.Value(1)).current;
+    const scanAnim = useRef(new Animated.Value(0)).current;
 
     const handleRetry = useCallback(async (silent = false) => {
         try {
             setChecking(true);
-            setAttempts(a => a + 1);
+            setAttempts((current) => current + 1);
             await api.get("/health");
             const token = await getToken();
             router.replace((token ? "/(tabs)" : "/login") as any);
@@ -40,21 +47,50 @@ export default function ServerDownScreen() {
     }, []);
 
     useEffect(() => {
-        /* Fade in al montar */
-        Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 600,
-            useNativeDriver: true,
-        }).start();
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 520,
+                useNativeDriver: true,
+            }),
+            Animated.spring(cardY, {
+                toValue: 0,
+                friction: 8,
+                tension: 58,
+                useNativeDriver: true,
+            }),
+        ]).start();
 
-        /* Pulso suave en el ícono */
         Animated.loop(
             Animated.sequence([
-                Animated.timing(pulseAnim, { toValue: 1.06, duration: 1400, useNativeDriver: true }),
-                Animated.timing(pulseAnim, { toValue: 1, duration: 1400, useNativeDriver: true }),
+                Animated.timing(pulseAnim, {
+                    toValue: 1.08,
+                    duration: 1400,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(pulseAnim, {
+                    toValue: 1,
+                    duration: 1400,
+                    useNativeDriver: true,
+                }),
             ])
         ).start();
-    }, [fadeAnim, pulseAnim]);
+
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(scanAnim, {
+                    toValue: 1,
+                    duration: 1900,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(scanAnim, {
+                    toValue: 0,
+                    duration: 0,
+                    useNativeDriver: true,
+                }),
+            ])
+        ).start();
+    }, [cardY, fadeAnim, pulseAnim, scanAnim]);
 
     useEffect(() => {
         if (checking) return;
@@ -73,91 +109,147 @@ export default function ServerDownScreen() {
         return () => clearInterval(interval);
     }, [checking, handleRetry]);
 
+    const scanTranslate = scanAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-120, 120],
+    });
+
     return (
         <View style={styles.root}>
-            <StatusBar barStyle="dark-content" />
+            <StatusBar barStyle="light-content" backgroundColor={BRAND_DARK} />
 
-            {/* Círculos decorativos */}
-            <View style={styles.bgCircle1} />
-            <View style={styles.bgCircle2} />
-            <View style={styles.bgCircle3} />
+            <View style={styles.background}>
+                <View style={styles.glowTop} />
+                <View style={styles.glowBottom} />
+                <View style={styles.gridLineA} />
+                <View style={styles.gridLineB} />
+            </View>
 
-            <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-
-                {/* Ícono animado */}
-                <Animated.View
-                    style={[styles.iconBox, { transform: [{ scale: pulseAnim }] }]}
-                >
-                    <Ionicons
-                        name="cloud-offline-outline"
-                        size={64}
-                        color="#EF4444"
+            <Animated.View
+                style={[
+                    styles.content,
+                    {
+                        opacity: fadeAnim,
+                        transform: [{ translateY: cardY }],
+                    },
+                ]}
+            >
+                <View style={styles.brandRow}>
+                    <Image
+                        source={require("@/assets/images/yara-adaptive-foreground-final.png")}
+                        style={styles.brandMark}
+                        resizeMode="contain"
                     />
-                </Animated.View>
-
-                {/* Texto principal */}
-                <Text style={styles.title}>Sin conexión</Text>
-                <Text style={styles.subtitle}>
-                    No pudimos conectar con Yara. Si Railway acaba de desplegar, esto suele durar unos segundos.
-                </Text>
-
-                {/* Chips de posibles causas */}
-                <View style={styles.causesRow}>
-                    {["Deploy activo", "Sin internet", "Timeout"].map((cause) => (
-                        <View key={cause} style={styles.causePill}>
-                            <Text style={styles.causePillText}>{cause}</Text>
-                        </View>
-                    ))}
+                    <View>
+                        <Text style={styles.brandName}>Yara</Text>
+                        <Text style={styles.brandSub}>Estado del servicio</Text>
+                    </View>
                 </View>
 
-                {/* Contador de intentos */}
-                {attempts > 0 && (
-                    <View style={styles.attemptsBanner}>
-                        <Text style={styles.attemptsBannerText}>
-                            {attempts === 1
-                                ? "Primer intento fallido. Sigo reintentando automáticamente."
-                                : `${attempts} intentos fallidos. Reintento automático activo.`
-                            }
+                <View style={styles.statusCard}>
+                    <View style={styles.scanWindow}>
+                        <Animated.View
+                            style={[
+                                styles.scanBeam,
+                                { transform: [{ translateX: scanTranslate }] },
+                            ]}
+                        />
+                        <Animated.View
+                            style={[
+                                styles.statusIcon,
+                                { transform: [{ scale: pulseAnim }] },
+                            ]}
+                        >
+                            <Ionicons name="cloud-offline-outline" size={36} color="#FFFFFF" />
+                        </Animated.View>
+                    </View>
+
+                    <View style={styles.statusPill}>
+                        <View style={styles.statusDot} />
+                        <Text style={styles.statusPillText}>Conexion interrumpida</Text>
+                    </View>
+
+                    <Text style={styles.title}>No podemos conectar con Yara</Text>
+                    <Text style={styles.subtitle}>
+                        Puede ser una pausa breve del backend, un deploy en Railway o una conexion inestable. Seguiremos intentando por ti.
+                    </Text>
+
+                    <View style={styles.retryPanel}>
+                        <View style={styles.retryPanelLeft}>
+                            <Ionicons name="time-outline" size={20} color={BRAND_BLUE} />
+                            <View>
+                                <Text style={styles.retryPanelLabel}>Reintento automatico</Text>
+                                <Text style={styles.retryPanelValue}>
+                                    En {nextRetry}s
+                                </Text>
+                            </View>
+                        </View>
+                        <Text style={styles.attemptBadge}>
+                            {attempts === 0 ? "Listo" : `${attempts} intento${attempts === 1 ? "" : "s"}`}
                         </Text>
                     </View>
-                )}
 
-                <View style={styles.autoRetryBox}>
-                    <Ionicons name="time-outline" size={18} color={COLORS.primary} />
-                    <Text style={styles.autoRetryText}>
-                        Próximo reintento en {nextRetry}s
-                    </Text>
+                    <TouchableOpacity
+                        style={[styles.retryButton, checking && styles.retryButtonDisabled]}
+                        disabled={checking}
+                        onPress={() => handleRetry()}
+                        activeOpacity={0.88}
+                    >
+                        {checking ? (
+                            <View style={styles.buttonContent}>
+                                <ActivityIndicator color="#FFFFFF" size="small" />
+                                <Text style={styles.retryText}>Verificando servicio</Text>
+                            </View>
+                        ) : (
+                            <View style={styles.buttonContent}>
+                                <Ionicons name="refresh-outline" size={20} color="#FFFFFF" />
+                                <Text style={styles.retryText}>Reintentar ahora</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
                 </View>
 
-                {/* Botón reintentar */}
-                <TouchableOpacity
-                    style={[styles.retryButton, checking && styles.retryButtonDisabled]}
-                    disabled={checking}
-                    onPress={() => handleRetry()}
-                    activeOpacity={0.85}
-                >
-                    {checking ? (
-                        <View style={styles.retryContent}>
-                            <ActivityIndicator color="white" size="small" />
-                            <Text style={styles.retryText}>Verificando...</Text>
-                        </View>
-                    ) : (
-                        <View style={styles.retryContent}>
-                            <Ionicons name="refresh-outline" size={20} color="white" />
-                            <Text style={styles.retryText}>Reintentar ahora</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-
-                {/* Tip */}
-                <View style={styles.tipBox}>
-                    <Ionicons name="information-circle-outline" size={18} color="#2563EB" style={styles.tipIcon} />
-                    <Text style={styles.tipText}>
-                        Puedes dejar esta pantalla abierta. Cuando el backend responda, volveremos al inicio.
-                    </Text>
+                <View style={styles.diagnosticsCard}>
+                    <Text style={styles.diagnosticsTitle}>Chequeo rapido</Text>
+                    <DiagnosticRow
+                        icon="wifi-outline"
+                        title="Internet del dispositivo"
+                        text="Confirma que tienes datos o Wi-Fi activo."
+                    />
+                    <DiagnosticRow
+                        icon="server-outline"
+                        title="Backend en Railway"
+                        text="Si acaba de desplegar, puede tardar unos segundos."
+                    />
+                    <DiagnosticRow
+                        icon="shield-checkmark-outline"
+                        title="Sesion protegida"
+                        text="Cuando vuelva el servicio, te llevaremos a tu cuenta."
+                    />
                 </View>
-
             </Animated.View>
+        </View>
+    );
+}
+
+function DiagnosticRow({
+    icon,
+    title,
+    text,
+}: {
+    icon: keyof typeof Ionicons.glyphMap;
+    title: string;
+    text: string;
+}) {
+    return (
+        <View style={styles.diagnosticRow}>
+            <View style={styles.diagnosticIcon}>
+                <Ionicons name={icon} size={18} color={BRAND_BLUE} />
+            </View>
+            <View style={styles.diagnosticBody}>
+                <Text style={styles.diagnosticTitle}>{title}</Text>
+                <Text style={styles.diagnosticText}>{text}</Text>
+            </View>
         </View>
     );
 }
@@ -166,166 +258,229 @@ const styles = StyleSheet.create({
 
     root: {
         flex: 1,
-        backgroundColor: "#F0F4FF",
-        justifyContent: "center",
-        alignItems: "center",
+        backgroundColor: BRAND_DARK,
     },
 
-    /* Decoraciones */
-    bgCircle1: {
+    background: {
+        ...StyleSheet.absoluteFillObject,
+        overflow: "hidden",
+    },
+
+    glowTop: {
+        position: "absolute",
+        width: 360,
+        height: 360,
+        borderRadius: 180,
+        backgroundColor: "rgba(37,99,235,0.58)",
+        top: -120,
+        right: -120,
+    },
+
+    glowBottom: {
         position: "absolute",
         width: 280,
         height: 280,
         borderRadius: 140,
-        backgroundColor: "rgba(239,68,68,0.06)",
-        top: -60,
-        right: -80,
+        backgroundColor: "rgba(125,211,252,0.20)",
+        bottom: -90,
+        left: -100,
     },
 
-    bgCircle2: {
+    gridLineA: {
         position: "absolute",
-        width: 180,
-        height: 180,
-        borderRadius: 90,
-        backgroundColor: "rgba(239,68,68,0.04)",
-        bottom: 40,
-        left: -50,
+        width: 1,
+        height: "100%",
+        backgroundColor: "rgba(255,255,255,0.07)",
+        left: "18%",
     },
 
-    bgCircle3: {
+    gridLineB: {
         position: "absolute",
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        backgroundColor: "rgba(37,99,235,0.05)",
-        bottom: 200,
-        right: 20,
+        width: "100%",
+        height: 1,
+        backgroundColor: "rgba(255,255,255,0.06)",
+        top: "18%",
     },
 
     content: {
-        alignItems: "center",
-        paddingHorizontal: 32,
-        width: "100%",
+        flex: 1,
+        paddingHorizontal: 22,
+        paddingTop: 56,
+        paddingBottom: 28,
+        justifyContent: "center",
     },
 
-    /* Ícono */
-    iconBox: {
-        width: 130,
-        height: 130,
-        borderRadius: 40,
-        backgroundColor: "#FEE2E2",
+    brandRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        marginBottom: 18,
+    },
+
+    brandMark: {
+        width: 44,
+        height: 44,
+    },
+
+    brandName: {
+        color: "#FFFFFF",
+        fontSize: 21,
+        fontWeight: "900",
+    },
+
+    brandSub: {
+        color: "rgba(255,255,255,0.64)",
+        fontSize: 12,
+        fontWeight: "700",
+        marginTop: 2,
+    },
+
+    statusCard: {
+        backgroundColor: "rgba(255,255,255,0.96)",
+        borderRadius: 30,
+        padding: 22,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.7)",
+        shadowColor: "#000000",
+        shadowOpacity: 0.22,
+        shadowOffset: { width: 0, height: 18 },
+        shadowRadius: 32,
+        elevation: 12,
+    },
+
+    scanWindow: {
+        height: 116,
+        borderRadius: 24,
+        backgroundColor: BRAND_DARK,
+        overflow: "hidden",
         justifyContent: "center",
         alignItems: "center",
-        marginBottom: 32,
-        borderWidth: 1.5,
+        marginBottom: 18,
+    },
+
+    scanBeam: {
+        position: "absolute",
+        width: 90,
+        height: 180,
+        backgroundColor: "rgba(125,211,252,0.22)",
+        transform: [{ rotate: "18deg" }],
+    },
+
+    statusIcon: {
+        width: 76,
+        height: 76,
+        borderRadius: 24,
+        backgroundColor: DANGER,
+        justifyContent: "center",
+        alignItems: "center",
+        borderWidth: 6,
+        borderColor: "rgba(255,255,255,0.18)",
+    },
+
+    statusPill: {
+        alignSelf: "flex-start",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        backgroundColor: "#FEF2F2",
+        borderRadius: 999,
+        paddingVertical: 7,
+        paddingHorizontal: 12,
+        borderWidth: 1,
         borderColor: "#FECACA",
-        shadowColor: "#EF4444",
-        shadowOpacity: 0.15,
-        shadowOffset: { width: 0, height: 8 },
-        shadowRadius: 20,
-        elevation: 6,
+        marginBottom: 14,
+    },
+
+    statusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: DANGER,
+    },
+
+    statusPillText: {
+        color: "#B91C1C",
+        fontSize: 12,
+        fontWeight: "900",
     },
 
     title: {
-        fontSize: 30,
-        fontWeight: "800",
-        color: "#1E293B",
-        letterSpacing: -0.5,
-        marginBottom: 12,
-        textAlign: "center",
+        color: "#0F172A",
+        fontSize: 28,
+        fontWeight: "900",
+        lineHeight: 34,
+        marginBottom: 10,
     },
 
     subtitle: {
-        fontSize: 15,
-        lineHeight: 24,
         color: "#64748B",
-        textAlign: "center",
-        fontWeight: "500",
-        marginBottom: 24,
-    },
-
-    /* Causas */
-    causesRow: {
-        flexDirection: "row",
-        gap: 8,
-        marginBottom: 28,
-    },
-
-    causePill: {
-        backgroundColor: "#FEF2F2",
-        borderRadius: 20,
-        paddingVertical: 6,
-        paddingHorizontal: 14,
-        borderWidth: 1,
-        borderColor: "#FECACA",
-    },
-
-    causePillText: {
-        fontSize: 12,
-        fontWeight: "700",
-        color: "#DC2626",
-    },
-
-    /* Intentos */
-    attemptsBanner: {
-        backgroundColor: "#FFFBEB",
-        borderRadius: 14,
-        padding: 14,
-        marginBottom: 24,
-        borderWidth: 1,
-        borderColor: "#FDE68A",
-        width: "100%",
-    },
-
-    attemptsBannerText: {
-        fontSize: 13,
-        color: "#92400E",
+        fontSize: 14,
+        lineHeight: 22,
         fontWeight: "600",
-        textAlign: "center",
-        lineHeight: 20,
+        marginBottom: 18,
     },
 
-    /* Botón */
-    autoRetryBox: {
+    retryPanel: {
+        backgroundColor: BRAND_SOFT,
+        borderRadius: 20,
+        padding: 14,
+        borderWidth: 1,
+        borderColor: "#BFDBFE",
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        backgroundColor: "#FFFFFF",
-        borderRadius: 16,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
+        justifyContent: "space-between",
         marginBottom: 16,
-        borderWidth: 1,
-        borderColor: "#DBEAFE",
-        width: "100%",
     },
 
-    autoRetryText: {
+    retryPanelLeft: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        flex: 1,
+    },
+
+    retryPanelLabel: {
+        color: "#1E3A8A",
+        fontSize: 12,
+        fontWeight: "800",
+    },
+
+    retryPanelValue: {
+        color: BRAND_BLUE,
+        fontSize: 18,
+        fontWeight: "900",
+        marginTop: 2,
+    },
+
+    attemptBadge: {
         color: "#475569",
-        fontSize: 13,
-        fontWeight: "700",
+        fontSize: 12,
+        fontWeight: "900",
+        backgroundColor: "#FFFFFF",
+        borderRadius: 999,
+        paddingVertical: 7,
+        paddingHorizontal: 10,
+        overflow: "hidden",
     },
 
     retryButton: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: BRAND_BLUE,
         borderRadius: 20,
         paddingVertical: 16,
-        paddingHorizontal: 36,
-        marginBottom: 24,
-        shadowColor: COLORS.primary,
-        shadowOpacity: 0.35,
-        shadowOffset: { width: 0, height: 8 },
-        shadowRadius: 16,
-        elevation: 6,
-        width: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: BRAND_BLUE,
+        shadowOpacity: 0.32,
+        shadowOffset: { width: 0, height: 10 },
+        shadowRadius: 18,
+        elevation: 8,
     },
 
     retryButtonDisabled: {
-        opacity: 0.65,
+        opacity: 0.7,
     },
 
-    retryContent: {
+    buttonContent: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
@@ -334,33 +489,57 @@ const styles = StyleSheet.create({
 
     retryText: {
         color: "#FFFFFF",
-        fontSize: 16,
-        fontWeight: "800",
+        fontSize: 15,
+        fontWeight: "900",
     },
 
-    /* Tip */
-    tipBox: {
+    diagnosticsCard: {
+        marginTop: 16,
+        backgroundColor: "rgba(255,255,255,0.12)",
+        borderRadius: 24,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.16)",
+    },
+
+    diagnosticsTitle: {
+        color: "#FFFFFF",
+        fontSize: 13,
+        fontWeight: "900",
+        marginBottom: 12,
+    },
+
+    diagnosticRow: {
         flexDirection: "row",
         alignItems: "flex-start",
-        backgroundColor: "#EFF6FF",
-        borderRadius: 16,
-        padding: 16,
-        gap: 10,
-        borderWidth: 1,
-        borderColor: "#BFDBFE",
-        width: "100%",
+        gap: 12,
+        paddingVertical: 10,
     },
 
-    tipIcon: {
-        fontSize: 15,
-        marginTop: 1,
+    diagnosticIcon: {
+        width: 34,
+        height: 34,
+        borderRadius: 13,
+        backgroundColor: "#FFFFFF",
+        alignItems: "center",
+        justifyContent: "center",
     },
 
-    tipText: {
+    diagnosticBody: {
         flex: 1,
+    },
+
+    diagnosticTitle: {
+        color: "#FFFFFF",
         fontSize: 13,
-        color: "#1D4ED8",
-        lineHeight: 20,
+        fontWeight: "900",
+        marginBottom: 3,
+    },
+
+    diagnosticText: {
+        color: "rgba(255,255,255,0.68)",
+        fontSize: 12,
+        lineHeight: 18,
         fontWeight: "600",
     },
 });

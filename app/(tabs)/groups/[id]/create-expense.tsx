@@ -33,6 +33,7 @@ import {
 import { COLORS } from "@/src/styles/colors";
 import { getGroupUsers } from "@/src/services/groupService";
 import { Ionicons } from "@expo/vector-icons";
+import { emitAppEvent } from "@/src/utils/appEvents";
 
 const AVATAR_COLORS = [
     { bg: "#DBEAFE", text: "#2563EB" },
@@ -258,6 +259,7 @@ export default function CreateExpenseScreen() {
                 await createExpense(payload);
             }
 
+            emitAppEvent("group", "groups", "dashboard", "payments", "activity", "badge");
             Alert.alert("Listo", editing ? "Gasto actualizado correctamente." : "Gasto registrado correctamente.");
             router.replace(`/groups/${id}` as any);
 

@@ -4,7 +4,9 @@ import {
 } from "expo-router";
 
 import React, {
+    useCallback,
     useEffect,
+    useRef,
     useState,
 } from "react";
 
@@ -27,6 +29,12 @@ import {
     getPendingInvitations,
     getUnreadNotificationsCount,
 } from "@/src/services/notificationService";
+import {
+    api,
+} from "@/src/services/api";
+import {
+    useAppRefresh,
+} from "@/src/utils/appEvents";
 
 /* ── Ícono personalizado con badge ── */
 function TabIcon({
@@ -104,16 +112,23 @@ const tabIconStyles = StyleSheet.create({
 export default function TabsLayout() {
 
     const [unreadNotifications, setUnreadNotifications] = useState(0);
+    const checkingBackendRef = useRef(false);
 
-    useEffect(() => {
-        loadUnreadNotifications();
-        const interval = setInterval(() => {
-            loadUnreadNotifications();
-        }, 3000);
-        return () => clearInterval(interval);
+    const checkBackendAvailability = useCallback(async () => {
+        if (checkingBackendRef.current) return;
+
+        try {
+            checkingBackendRef.current = true;
+            await api.get("/health", { timeout: 5000 });
+        } catch (error) {
+            console.log(error);
+            router.replace("/server-down" as any);
+        } finally {
+            checkingBackendRef.current = false;
+        }
     }, []);
 
-    const loadUnreadNotifications = async () => {
+    const loadUnreadNotifications = useCallback(async () => {
         try {
             const [unreadTotal, pendingInvitations] = await Promise.all([
                 getUnreadNotificationsCount(),
@@ -123,8 +138,28 @@ export default function TabsLayout() {
             setUnreadNotifications(unreadTotal + pendingInvitations.length);
         } catch (error) {
             console.log(error);
+            checkBackendAvailability();
         }
-    };
+    }, [checkBackendAvailability]);
+
+    useEffect(() => {
+        loadUnreadNotifications();
+        const interval = setInterval(() => {
+            loadUnreadNotifications();
+        }, 3000);
+        return () => clearInterval(interval);
+    }, [loadUnreadNotifications]);
+
+    useAppRefresh(["badge", "activity", "payments"], loadUnreadNotifications);
+
+    useEffect(() => {
+        checkBackendAvailability();
+        const interval = setInterval(() => {
+            checkBackendAvailability();
+        }, 8000);
+
+        return () => clearInterval(interval);
+    }, [checkBackendAvailability]);
 
     return (
         <Tabs

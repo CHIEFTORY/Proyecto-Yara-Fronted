@@ -21,6 +21,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { COLORS } from "@/src/styles/colors";
 import { getMyGroups } from "@/src/services/groupService";
 import { Ionicons } from "@expo/vector-icons";
+import { useAppRefresh } from "@/src/utils/appEvents";
 
 // ─── Paleta navy premium ───────────────────────────────────────────────────────
 const NAVY   = "#0F1F5C";
@@ -59,6 +60,8 @@ export default function GroupsScreen() {
             loadGroups();
         }, [fadeAnim, loadGroups, slideAnim])
     );
+
+    useAppRefresh(["groups", "group"], loadGroups);
 
     if (loading) {
         return (

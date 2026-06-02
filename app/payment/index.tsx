@@ -24,6 +24,7 @@ import {
 import {
     COLORS,
 } from "@/src/styles/colors";
+import { useAppRefresh } from "@/src/utils/appEvents";
 import { Ionicons } from "@expo/vector-icons";
 
 import {
@@ -130,6 +131,8 @@ export default function PaymentsScreen() {
             loadData();
         }, [loadData])
     );
+
+    useAppRefresh(["payments", "dashboard", "activity"], loadData);
 
     const total = deudas.reduce(
         (acc, item) => acc + Number(item.monto),

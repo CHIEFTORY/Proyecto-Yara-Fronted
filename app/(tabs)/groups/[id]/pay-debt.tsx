@@ -31,6 +31,7 @@ import {
     createPayment,
     getPendingPayments,
 } from "@/src/services/paymentDebtService";
+import { emitAppEvent } from "@/src/utils/appEvents";
 
 export default function PayDebtPage() {
 
@@ -241,6 +242,7 @@ export default function PayDebtPage() {
                 "Pago registrado",
                 `La deuda fue marcada como pagada por ${methodLabel} y se notifico al destinatario.`
             );
+            emitAppEvent("payments", "group", "dashboard", "activity", "badge");
             router.replace(backTarget as any);
         } catch (error) {
             console.log(error);

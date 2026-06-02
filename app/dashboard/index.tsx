@@ -44,6 +44,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 import { COLORS } from "@/src/styles/colors";
+import { useAppRefresh } from "@/src/utils/appEvents";
 
 export default function DashboardScreen() {
 
@@ -101,6 +102,8 @@ export default function DashboardScreen() {
             loadDashboard();
         }, [loadDashboard])
     );
+
+    useAppRefresh(["dashboard", "activity", "badge", "groups", "payments"], loadDashboard);
 
     const hora = new Date().getHours();
     const saludo =

@@ -1,6 +1,7 @@
 import {
     Stack,
 } from "expo-router";
+import { useEffect } from "react";
 
 import {
     StatusBar,
@@ -13,12 +14,19 @@ import {
 import {
     ToastProvider,
 } from "@/src/context/ToastContext";
+import {
+    setupPushNotificationNavigation,
+} from "@/src/utils/pushNotifications";
 
 function AppContent() {
 
     const {
         theme,
     } = useTheme();
+
+    useEffect(() => {
+        return setupPushNotificationNavigation();
+    }, []);
 
     return (
         <>

@@ -16,6 +16,7 @@ import {
 
 import {
     useEffect,
+    useMemo,
     useRef,
     useState,
 } from "react";
@@ -39,11 +40,23 @@ export default function PayDebtPage() {
         acreedorId,
         monto,
         yapeNumero,
+        metodosCobro,
         returnTo,
     } = useLocalSearchParams();
+    const routeMethodsParam = Array.isArray(metodosCobro) ? metodosCobro[0] : metodosCobro;
+    const routeMethods = useMemo(
+        () => parseRouteMethods(routeMethodsParam),
+        [routeMethodsParam]
+    );
+    const hasPrefetchedMethods = typeof routeMethodsParam === "string";
+    const hasRouteCollectionData =
+        hasPrefetchedMethods
+        || Boolean(yapeNumero && yapeNumero !== "null");
+    const requestedDebtKey = `${id}-${deudorId}-${acreedorId}-${monto}-${yapeNumero || ""}-${routeMethodsParam || ""}`;
 
     const [loading, setLoading] = useState(false);
-    const [debtLoaded, setDebtLoaded] = useState(false);
+    const [debtLoaded, setDebtLoaded] = useState(hasRouteCollectionData);
+    const [loadedDebtKey, setLoadedDebtKey] = useState(hasRouteCollectionData ? requestedDebtKey : "");
     const [copied, setCopied] = useState(false);
     const [debtData, setDebtData] = useState({
         grupoId: Number(id),
@@ -51,11 +64,17 @@ export default function PayDebtPage() {
         acreedorId: Number(acreedorId),
         monto: Number(monto),
         yapeNumero: String(yapeNumero || ""),
-        metodosCobro: [] as any[],
+        metodosCobro: routeMethods,
     });
     const [selectedMethod, setSelectedMethod] = useState<any>(null);
     const scaleAnim = useRef(new Animated.Value(1)).current;
-    const amountValue = Number.isFinite(debtData.monto) ? debtData.monto : 0;
+    const isResolvingDebt = !debtLoaded || loadedDebtKey !== requestedDebtKey;
+    const routeAmount = Number(monto);
+    const amountValue = isResolvingDebt && Number.isFinite(routeAmount)
+        ? routeAmount
+        : Number.isFinite(debtData.monto)
+            ? debtData.monto
+            : 0;
     const rawAvailableMethods =
         debtData.metodosCobro.length > 0
             ? debtData.metodosCobro
@@ -73,9 +92,10 @@ export default function PayDebtPage() {
         || availableMethods.find((method: any) => method.predeterminado)
         || availableMethods[0];
     const methodLabel = getMethodLabel(activeMethod);
-    const methodTheme = getMethodTheme(activeMethod, !debtLoaded && availableMethods.length === 0);
+    const methodTheme = getMethodTheme(activeMethod, isResolvingDebt || availableMethods.length === 0);
     const copyValue = getMethodCopyValue(activeMethod);
     const hasPaymentDestination = Boolean(activeMethod && copyValue);
+    const paymentAppTarget = getPaymentAppLaunchTarget(activeMethod);
 
     useEffect(() => {
         const current = {
@@ -84,7 +104,7 @@ export default function PayDebtPage() {
             acreedorId: Number(acreedorId),
             monto: Number(monto),
             yapeNumero: String(yapeNumero || ""),
-            metodosCobro: [] as any[],
+            metodosCobro: routeMethods,
         };
 
         const hasFullParams =
@@ -95,6 +115,14 @@ export default function PayDebtPage() {
 
         const loadDebt = async () => {
             try {
+                if (hasRouteCollectionData) {
+                    setDebtData(current);
+                    setSelectedMethod(null);
+                    setLoadedDebtKey(requestedDebtKey);
+                    setDebtLoaded(true);
+                    return;
+                }
+
                 setDebtLoaded(false);
                 const pending = await getPendingPayments();
                 const debt = pending.find((item: any) =>
@@ -107,6 +135,7 @@ export default function PayDebtPage() {
 
                 if (!debt) {
                     if (hasFullParams) setDebtData(current);
+                    setLoadedDebtKey(requestedDebtKey);
                     return;
                 }
 
@@ -120,17 +149,21 @@ export default function PayDebtPage() {
                         ? debt.metodosCobro
                         : [],
                 });
+                setLoadedDebtKey(requestedDebtKey);
                 setSelectedMethod(null);
             } catch (error) {
                 console.log(error);
-                if (hasFullParams) setDebtData(current);
+                if (hasFullParams) {
+                    setDebtData(current);
+                    setLoadedDebtKey(requestedDebtKey);
+                }
             } finally {
                 setDebtLoaded(true);
             }
         };
 
         loadDebt();
-    }, [id, deudorId, acreedorId, monto, yapeNumero]);
+    }, [acreedorId, deudorId, hasRouteCollectionData, id, monto, requestedDebtKey, routeMethods, yapeNumero]);
 
     const handleCopyNumber = async () => {
         if (!copyValue) return;
@@ -140,29 +173,31 @@ export default function PayDebtPage() {
     };
 
     const handleCopyAndOpenApp = async () => {
-        await handleCopyNumber();
+        if (!copyValue || !paymentAppTarget) return;
 
-        const appInfo = getExternalPaymentApp(activeMethod);
-
-        if (!appInfo) {
-            return;
-        }
+        await Clipboard.setStringAsync(copyValue);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
 
         if (Platform.OS !== "android") {
             Alert.alert(
                 "Numero copiado",
-                `Abre ${appInfo.label} manualmente y pega el numero copiado.`
+                `Abre ${paymentAppTarget.label} y pega el numero copiado.`
             );
             return;
         }
 
         try {
-            IntentLauncher.openApplication(appInfo.packageName);
+            await IntentLauncher.startActivityAsync("android.intent.action.MAIN", {
+                packageName: paymentAppTarget.packageName,
+                className: paymentAppTarget.className,
+                category: "android.intent.category.LAUNCHER",
+            });
         } catch (error) {
             console.log(error);
             Alert.alert(
                 "Numero copiado",
-                `No pudimos abrir ${appInfo.label} automaticamente. Abre la app manualmente y pega el numero copiado.`
+                `No pudimos abrir ${paymentAppTarget.label} automaticamente. Abre la app manualmente y pega el numero copiado.`
             );
         }
     };
@@ -269,12 +304,27 @@ export default function PayDebtPage() {
                     <Text style={styles.amountLabel}>Total a pagar</Text>
                     <Text style={styles.amount}>S/ {amountValue.toFixed(2)}</Text>
                     <View style={[styles.amountBadge, { backgroundColor: methodTheme.badgeBg }]}>
-                        <Ionicons name={getMethodIcon(activeMethod)} size={14} color="#FFFFFF" />
-                        <Text style={styles.amountBadgeText}>{methodLabel}</Text>
+                        <Ionicons
+                            name={isResolvingDebt ? "time-outline" : getMethodIcon(activeMethod)}
+                            size={14}
+                            color="#FFFFFF"
+                        />
+                        <Text style={styles.amountBadgeText}>
+                            {isResolvingDebt ? "Cargando" : methodLabel}
+                        </Text>
                     </View>
                 </View>
             </View>
 
+            {isResolvingDebt ? (
+                <View style={styles.loadingState}>
+                    <ActivityIndicator color={methodTheme.primary} />
+                    <Text style={styles.loadingStateTitle}>Cargando datos de pago</Text>
+                    <Text style={styles.loadingStateText}>
+                        Estamos verificando los metodos disponibles del destinatario.
+                    </Text>
+                </View>
+            ) : (
             <ScrollView
                 style={styles.scroll}
                 contentContainerStyle={{ paddingBottom: 80 }}
@@ -412,23 +462,25 @@ export default function PayDebtPage() {
                             {copied ? "Copiado" : getCopyButtonLabel(activeMethod)}
                         </Text>
                     </TouchableOpacity>
-                    {getExternalPaymentApp(activeMethod) && (
-                        <TouchableOpacity
-                            style={[
-                                styles.openAppBtn,
-                                { backgroundColor: methodTheme.primary },
-                                !copyValue && styles.disabledAction,
-                            ]}
-                            onPress={handleCopyAndOpenApp}
-                            activeOpacity={0.86}
-                            disabled={!copyValue}
-                        >
-                            <Ionicons name="open-outline" size={17} color="#FFFFFF" />
-                            <Text style={styles.openAppBtnText}>
-                                Copiar numero y abrir {getExternalPaymentApp(activeMethod)?.label}
+                    {activeMethod?.tipo !== "BANCO" && copyValue ? (
+                        <>
+                            {paymentAppTarget && (
+                                <TouchableOpacity
+                                    style={[styles.openAppBtn, { backgroundColor: methodTheme.primary }]}
+                                    onPress={handleCopyAndOpenApp}
+                                    activeOpacity={0.86}
+                                >
+                                    <Ionicons name="open-outline" size={18} color="#FFFFFF" />
+                                    <Text style={styles.openAppBtnText}>
+                                        Abrir {paymentAppTarget.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                            <Text style={styles.manualPaymentHint}>
+                                Copiamos el numero antes de abrir la app para que puedas pegarlo al pagar.
                             </Text>
-                        </TouchableOpacity>
-                    )}
+                        </>
+                    ) : null}
                 </View>
 
                 {/* ── PASOS ── */}
@@ -503,6 +555,7 @@ export default function PayDebtPage() {
                 </TouchableOpacity>
 
             </ScrollView>
+            )}
         </View>
     );
 }
@@ -512,6 +565,17 @@ function getMethodLabel(method: any) {
     if (method.tipo === "PLIN") return "Plin";
     if (method.tipo === "BANCO") return method.bancoNombre || "Cuenta bancaria";
     return "Yape";
+}
+
+function parseRouteMethods(value?: string | string[]) {
+    if (!value || Array.isArray(value)) return [];
+
+    try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
 }
 
 function normalizeReceiverMethods(methods: any[]) {
@@ -583,18 +647,22 @@ function getCopyButtonLabel(method: any) {
     return "Copiar numero";
 }
 
-function getExternalPaymentApp(method: any) {
-    if (method?.tipo === "YAPE") {
+function getPaymentAppLaunchTarget(method: any) {
+    if (!method) return null;
+
+    if (method.tipo === "YAPE") {
         return {
             label: "Yape",
             packageName: "com.bcp.innovacxion.yapeapp",
+            className: "com.yape.activity.MainActivity",
         };
     }
 
-    if (method?.tipo === "PLIN") {
+    if (method.tipo === "PLIN") {
         return {
             label: "Interbank",
             packageName: "pe.com.interbank.mobilebanking",
+            className: "pe.com.interbank.mobilebanking.feature.splash.view.SplashActivity",
         };
     }
 
@@ -782,6 +850,30 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: 20,
         paddingTop: 24,
+    },
+
+    loadingState: {
+        flex: 1,
+        paddingHorizontal: 28,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    loadingStateTitle: {
+        marginTop: 14,
+        color: "#0F172A",
+        fontSize: 16,
+        fontWeight: "800",
+        textAlign: "center",
+    },
+
+    loadingStateText: {
+        marginTop: 6,
+        color: "#64748B",
+        fontSize: 13,
+        lineHeight: 20,
+        fontWeight: "600",
+        textAlign: "center",
     },
 
     /* ── INFO BANNER ── */
@@ -994,6 +1086,15 @@ const styles = StyleSheet.create({
 
     copyBtnTextSuccess: {
         color: "#16A34A",
+    },
+
+    manualPaymentHint: {
+        color: "#64748B",
+        fontSize: 12,
+        fontWeight: "700",
+        lineHeight: 18,
+        marginTop: 12,
+        textAlign: "center",
     },
 
     disabledAction: {

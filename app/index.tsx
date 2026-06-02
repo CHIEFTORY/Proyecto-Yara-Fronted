@@ -10,6 +10,7 @@ import {
     StyleSheet,
     Animated,
     StatusBar,
+    Image,
 } from "react-native";
 
 import { getProfile } from "@/src/services/userService";
@@ -25,7 +26,7 @@ export default function Home() {
     const [authenticated, setAuthenticated] = useState(false);
 
     /* Animaciones */
-    const logoScale = useRef(new Animated.Value(0.7)).current;
+    const logoScale = useRef(new Animated.Value(0.92)).current;
     const logoOpacity = useRef(new Animated.Value(0)).current;
     const titleOpacity = useRef(new Animated.Value(0)).current;
     const titleY = useRef(new Animated.Value(16)).current;
@@ -121,11 +122,11 @@ export default function Home() {
                         transform: [{ scale: logoScale }],
                     }
                 ]}>
-                    <View style={styles.logoRing}>
-                        <View style={styles.logo}>
-                            <Text style={styles.logoText}>Y</Text>
-                        </View>
-                    </View>
+                    <Image
+                        source={require("@/assets/images/yara-splash-logo-final.png")}
+                        style={styles.logoImage}
+                        resizeMode="contain"
+                    />
                 </Animated.View>
 
                 {/* Nombre app */}
@@ -218,36 +219,12 @@ const styles = StyleSheet.create({
 
     /* Logo */
     logoWrapper: {
-        marginBottom: 28,
+        marginBottom: 8,
     },
 
-    logoRing: {
-        width: 120,
-        height: 120,
-        borderRadius: 38,
-        backgroundColor: "rgba(255,255,255,0.12)",
-        justifyContent: "center",
-        alignItems: "center",
-        borderWidth: 1.5,
-        borderColor: "rgba(255,255,255,0.2)",
-    },
-
-    logo: {
-        width: 88,
-        height: 88,
-        borderRadius: 28,
-        backgroundColor: "rgba(255,255,255,0.18)",
-        justifyContent: "center",
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.3)",
-    },
-
-    logoText: {
-        color: "#FFFFFF",
-        fontSize: 42,
-        fontWeight: "800",
-        letterSpacing: -1,
+    logoImage: {
+        width: 168,
+        height: 168,
     },
 
     appName: {

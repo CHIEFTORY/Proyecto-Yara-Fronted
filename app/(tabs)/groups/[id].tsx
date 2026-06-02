@@ -48,6 +48,17 @@ import {
     makeAdmin,
 } from "@/src/services/groupService";
 
+const buildGroupPayDebtRoute = (groupId: string | string[], deuda: any) => {
+    const methods = encodeURIComponent(JSON.stringify(
+        Array.isArray(deuda.metodosCobro) ? deuda.metodosCobro : []
+    ));
+    const yape = deuda.yapeNumero
+        ? `&yapeNumero=${encodeURIComponent(String(deuda.yapeNumero))}`
+        : "";
+
+    return `/groups/${groupId}/pay-debt?deudorId=${deuda.deudorId}&acreedorId=${deuda.acreedorId}&monto=${deuda.monto}${yape}&metodosCobro=${methods}`;
+};
+
 export default function GroupDetailScreen() {
 
     const { id, returnTo } = useLocalSearchParams();
@@ -466,7 +477,7 @@ export default function GroupDetailScreen() {
                                                 style={styles.payButton}
                                                 onPress={() => {
                                                     router.push(
-                                                        `/groups/${id}/pay-debt?deudorId=${deuda.deudorId}&acreedorId=${deuda.acreedorId}&monto=${deuda.monto}` as any
+                                                        buildGroupPayDebtRoute(id, deuda) as any
                                                     );
                                                 }}
                                             >

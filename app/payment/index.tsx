@@ -55,6 +55,17 @@ const getCollectionMethodText = (deuda: any) => {
     return `${method.alias || method.tipo} ${method.numeroTelefono || ""}`.trim();
 };
 
+const buildPayDebtRoute = (deuda: any, returnParam: string) => {
+    const methods = encodeURIComponent(JSON.stringify(
+        Array.isArray(deuda.metodosCobro) ? deuda.metodosCobro : []
+    ));
+    const yape = deuda.yapeNumero
+        ? `&yapeNumero=${encodeURIComponent(String(deuda.yapeNumero))}`
+        : "";
+
+    return `/groups/${deuda.grupoId}/pay-debt?deudorId=${deuda.deudorId}&acreedorId=${deuda.acreedorId}&monto=${deuda.monto}${yape}&metodosCobro=${methods}${returnParam}`;
+};
+
 export default function PaymentsScreen() {
     const { returnTo } = useLocalSearchParams();
     const shouldReturnToDashboard = returnTo === "dashboard";
@@ -356,9 +367,7 @@ export default function PaymentsScreen() {
                                             ? "&returnTo=paymentDashboard"
                                             : "&returnTo=payment";
 
-                                        router.push(
-                                            `/groups/${deuda.grupoId}/pay-debt?deudorId=${deuda.deudorId}&acreedorId=${deuda.acreedorId}&monto=${deuda.monto}${returnParam}` as any
-                                        );
+                                        router.push(buildPayDebtRoute(deuda, returnParam) as any);
                                     }}
                                     activeOpacity={0.75}
                                 >

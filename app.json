@@ -4,7 +4,7 @@
     "slug": "yara",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/yara_app_icon_blue.png",
+    "icon": "./assets/images/yara-icon-final.png",
     "scheme": "yara",
     "userInterfaceStyle": "automatic",
     "runtimeVersion": {
@@ -21,26 +21,27 @@
       "package": "com.mauricioparra.yara",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "backgroundColor": "#000000",
-        "foregroundImage": "./assets/images/yara_android_foreground_blue.png",
-        "monochromeImage": "./assets/images/yara_monochrome_blue.png"
+        "backgroundColor": "#082E74",
+        "backgroundImage": "./assets/images/yara-adaptive-background-final.png",
+        "foregroundImage": "./assets/images/yara-adaptive-foreground-final.png",
+        "monochromeImage": "./assets/images/yara-monochrome-final.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/yara_app_icon_blue.png"
+      "favicon": "./assets/images/yara-favicon-final.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/yara_app_icon_blue.png",
-          "imageWidth": 120,
+          "image": "./assets/images/yara-splash-logo-final.png",
+          "imageWidth": 160,
           "resizeMode": "contain",
-          "backgroundColor": "#000000"
+          "backgroundColor": "#082E74"
         }
       ],
       "expo-secure-store",

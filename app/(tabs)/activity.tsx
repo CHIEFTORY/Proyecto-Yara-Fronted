@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import {
     router,
+    useLocalSearchParams,
 } from "expo-router";
 
 import {
@@ -115,6 +116,9 @@ const getNotificationAction = (notification: NotificationItem) => {
 
 export default function ActivityPage() {
 
+    const {
+        tab,
+    } = useLocalSearchParams();
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [invitations, setInvitations] = useState<InvitationItem[]>([]);
     const [activeTab, setActiveTab] = useState<"ACTIVITY" | "REQUESTS">("ACTIVITY");
@@ -135,7 +139,12 @@ export default function ActivityPage() {
         .sort((a, b) => Number(a.leido) - Number(b.leido));
 
     useFocusEffect(
-        React.useCallback(() => { loadData(); }, [])
+        React.useCallback(() => {
+            if (tab === "requests") {
+                setActiveTab("REQUESTS");
+            }
+            loadData();
+        }, [tab])
     );
 
     const loadData = async () => {

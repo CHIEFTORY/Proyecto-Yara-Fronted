@@ -48,7 +48,9 @@
       [
         "expo-notifications",
         {
-          "color": "#ffffff"
+          "icon": "./assets/images/yara-monochrome-final.png",
+          "color": "#2563EB",
+          "defaultChannel": "actividad"
         }
       ]
     ],

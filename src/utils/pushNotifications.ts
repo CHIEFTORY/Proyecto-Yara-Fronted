@@ -1,8 +1,48 @@
 import * as Device
     from "expo-device";
 import Constants from "expo-constants";
+import { Platform } from "react-native";
 import { router } from "expo-router";
 import { emitAppEvent } from "@/src/utils/appEvents";
+
+const configureAndroidNotificationChannels =
+    async (Notifications: typeof import("expo-notifications")) => {
+
+        if (Platform.OS !== "android") {
+            return;
+        }
+
+        const channels = [
+            {
+                id: "pagos",
+                name: "Pagos",
+                description: "Pagos por confirmar, recibos y deudas pendientes.",
+            },
+            {
+                id: "grupos",
+                name: "Grupos",
+                description: "Invitaciones y cambios importantes en tus grupos.",
+            },
+            {
+                id: "actividad",
+                name: "Actividad",
+                description: "Movimientos y recordatorios generales de Yara.",
+            },
+        ];
+
+        await Promise.all(
+            channels.map((channel) =>
+                Notifications.setNotificationChannelAsync(channel.id, {
+                    name: channel.name,
+                    description: channel.description,
+                    importance: Notifications.AndroidImportance.HIGH,
+                    vibrationPattern: [0, 250, 160, 250],
+                    lightColor: "#2563EB",
+                    sound: "default",
+                })
+            )
+        );
+    };
 
 export const registerForPushNotifications =
     async () => {
@@ -20,6 +60,8 @@ export const registerForPushNotifications =
 
         const Notifications =
             await import("expo-notifications");
+
+        await configureAndroidNotificationChannels(Notifications);
 
         const { status: existingStatus } =
 
@@ -70,6 +112,8 @@ export const setupPushNotificationNavigation = () => {
         try {
             const Notifications =
                 await import("expo-notifications");
+
+            await configureAndroidNotificationChannels(Notifications);
 
             Notifications.setNotificationHandler({
                 handleNotification: async () => ({

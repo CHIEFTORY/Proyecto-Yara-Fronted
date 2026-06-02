@@ -6,10 +6,10 @@ import { router } from "expo-router";
 import { emitAppEvent } from "@/src/utils/appEvents";
 
 const configureAndroidNotificationChannels =
-    async (Notifications: typeof import("expo-notifications")) => {
+    (Notifications: typeof import("expo-notifications")) => {
 
         if (Platform.OS !== "android") {
-            return;
+            return Promise.resolve();
         }
 
         const channels = [
@@ -30,7 +30,7 @@ const configureAndroidNotificationChannels =
             },
         ];
 
-        await Promise.all(
+        return Promise.all(
             channels.map((channel) =>
                 Notifications.setNotificationChannelAsync(channel.id, {
                     name: channel.name,
@@ -41,62 +41,46 @@ const configureAndroidNotificationChannels =
                     sound: "default",
                 })
             )
-        );
+        ).then(() => undefined);
     };
 
 export const registerForPushNotifications =
-    async () => {
+    () => {
 
         if (!Device.isDevice) {
-            return null;
+            return Promise.resolve(null);
         }
 
         if (Constants.appOwnership === "expo") {
             console.log(
                 "Push remoto omitido: Expo Go en Android ya no soporta expo-notifications. Usa development build."
             );
-            return null;
+            return Promise.resolve(null);
         }
 
-        const Notifications =
-            await import("expo-notifications");
+        return import("expo-notifications")
+            .then((Notifications) =>
+                configureAndroidNotificationChannels(Notifications)
+                    .then(() => Notifications.getPermissionsAsync())
+                    .then(({ status: existingStatus }) => {
+                        if (existingStatus === "granted") {
+                            return Promise.resolve("granted");
+                        }
 
-        await configureAndroidNotificationChannels(Notifications);
+                        return Notifications
+                            .requestPermissionsAsync()
+                            .then(({ status }) => status);
+                    })
+                    .then((finalStatus: string) => {
+                        if (finalStatus !== "granted") {
+                            return null;
+                        }
 
-        const { status: existingStatus } =
-
-            await Notifications
-                .getPermissionsAsync();
-
-        let finalStatus =
-            existingStatus;
-
-        if (
-            existingStatus !== "granted"
-        ) {
-
-            const { status } =
-
-                await Notifications
-                    .requestPermissionsAsync();
-
-            finalStatus = status;
-        }
-
-        if (
-            finalStatus !== "granted"
-        ) {
-
-            return null;
-        }
-
-        const token =
-            (
-                await Notifications
-                    .getExpoPushTokenAsync()
-            ).data;
-
-        return token;
+                        return Notifications
+                            .getExpoPushTokenAsync()
+                            .then((token) => token.data);
+                    })
+            );
     };
 
 export const setupPushNotificationNavigation = () => {
@@ -108,59 +92,59 @@ export const setupPushNotificationNavigation = () => {
     let receivedSubscription: { remove: () => void } | null = null;
     let mounted = true;
 
-    const setup = async () => {
-        try {
-            const Notifications =
-                await import("expo-notifications");
+    const setup = () => {
+        import("expo-notifications")
+            .then((Notifications) =>
+                configureAndroidNotificationChannels(Notifications)
+                    .then(() => {
 
-            await configureAndroidNotificationChannels(Notifications);
+                        Notifications.setNotificationHandler({
+                            handleNotification: () => Promise.resolve({
+                                shouldPlaySound: true,
+                                shouldSetBadge: false,
+                                shouldShowBanner: true,
+                                shouldShowList: true,
+                            }),
+                        });
 
-            Notifications.setNotificationHandler({
-                handleNotification: async () => ({
-                    shouldPlaySound: true,
-                    shouldSetBadge: false,
-                    shouldShowBanner: true,
-                    shouldShowList: true,
-                }),
-            });
+                        receivedSubscription =
+                            Notifications.addNotificationReceivedListener(() => {
+                                emitAppEvent(
+                                    "activity",
+                                    "badge",
+                                    "dashboard",
+                                    "group",
+                                    "groups",
+                                    "payments"
+                                );
+                            });
 
-            receivedSubscription =
-                Notifications.addNotificationReceivedListener(() => {
-                    emitAppEvent(
-                        "activity",
-                        "badge",
-                        "dashboard",
-                        "group",
-                        "groups",
-                        "payments"
-                    );
-                });
+                        responseSubscription =
+                            Notifications.addNotificationResponseReceivedListener((response) => {
+                                const data =
+                                    response.notification.request.content.data as {
+                                        route?: string;
+                                    };
 
-            responseSubscription =
-                Notifications.addNotificationResponseReceivedListener((response) => {
-                    const data =
-                        response.notification.request.content.data as {
-                            route?: string;
-                        };
+                                if (!mounted || !data?.route) return;
 
-                    if (!mounted || !data?.route) return;
+                                emitAppEvent("activity", "badge", "dashboard", "payments", "group", "groups");
+                                router.push(data.route as any);
+                            });
 
-                    emitAppEvent("activity", "badge", "dashboard", "payments", "group", "groups");
-                    router.push(data.route as any);
-                });
+                        return Notifications.getLastNotificationResponseAsync();
+                    })
+                    .then((lastResponse) => {
 
-            const lastResponse =
-                await Notifications.getLastNotificationResponseAsync();
+                        const route =
+                            lastResponse?.notification.request.content.data?.route;
 
-            const route =
-                lastResponse?.notification.request.content.data?.route;
-
-            if (mounted && typeof route === "string") {
-                router.push(route as any);
-            }
-        } catch (error) {
-            console.log(error);
-        }
+                        if (mounted && typeof route === "string") {
+                            router.push(route as any);
+                        }
+                    })
+            )
+            .catch(console.log);
     };
 
     setup();

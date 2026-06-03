@@ -22,6 +22,7 @@ function AppContent() {
 
     const {
         theme,
+        colors,
     } = useTheme();
 
     useEffect(() => {
@@ -33,6 +34,9 @@ function AppContent() {
             <Stack
                 screenOptions={{
                     headerShown: false,
+                    contentStyle: {
+                        backgroundColor: colors.background,
+                    },
                 }}
             />
 

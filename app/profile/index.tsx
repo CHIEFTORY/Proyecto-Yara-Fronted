@@ -7,6 +7,7 @@ import {
     ScrollView,
     StatusBar,
     Animated,
+    Switch,
 } from "react-native";
 import {
     CommonActions,
@@ -46,9 +47,13 @@ import {
 import {
     registerForPushNotifications,
 } from "@/src/utils/pushNotifications";
+import {
+    useTheme,
+} from "@/src/context/ThemeContext";
 
 export default function ProfileScreen() {
     const navigation = useNavigation();
+    const { colors, isDark, toggleTheme } = useTheme();
     const [user, setUser] = useState<any>(null);
     const [collectionMethods, setCollectionMethods] = useState<MetodoCobro[]>([]);
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -121,10 +126,25 @@ export default function ProfileScreen() {
     const methodSummary = defaultMethod
         ? getCollectionMethodSummary(defaultMethod, collectionMethods.length)
         : "Yape, Plin o banco";
+    const themedOptionsGroup = [
+        styles.optionsGroup,
+        {
+            backgroundColor: colors.card,
+            borderColor: isDark ? "#1E293B" : "transparent",
+            shadowOpacity: isDark ? 0.24 : 0.1,
+        },
+    ];
+    const themedGroupLabel = [
+        styles.groupLabel,
+        { color: isDark ? "#64748B" : "#94A3B8" },
+    ];
 
     return (
-        <View style={styles.root}>
-            <StatusBar barStyle="light-content" />
+        <View style={[styles.root, { backgroundColor: colors.background }]}>
+            <StatusBar
+                barStyle="light-content"
+                backgroundColor={isDark ? "#07111F" : COLORS.primary}
+            />
             <AmbientScreenBackground intensity="medium" />
 
             <ScrollView
@@ -133,7 +153,10 @@ export default function ProfileScreen() {
                 showsVerticalScrollIndicator={false}
             >
                 {/* ── HEADER ── */}
-                <View style={styles.header}>
+                <View style={[
+                    styles.header,
+                    { backgroundColor: isDark ? "#07111F" : COLORS.primary },
+                ]}>
                     <View style={styles.deco1} />
                     <View style={styles.deco2} />
                     <View style={styles.deco3} />
@@ -189,28 +212,32 @@ export default function ProfileScreen() {
                     ]}
                 >
                     {/* Grupo: Cuenta */}
-                    <Text style={styles.groupLabel}>CUENTA</Text>
+                    <Text style={themedGroupLabel}>CUENTA</Text>
 
-                    <View style={styles.optionsGroup}>
+                    <View style={themedOptionsGroup}>
                         <OptionRow
                             icon="person-outline"
                             label="Editar perfil"
                             sublabel="Nombre y teléfono"
                             onPress={() => router.push("/profile/edit")}
+                            colors={colors}
+                            isDark={isDark}
                         />
-                        <View style={styles.divider} />
+                        <View style={[styles.divider, { backgroundColor: colors.border }]} />
                         <OptionRow
                             icon="lock-closed-outline"
                             label="Cambiar contraseña"
                             sublabel="Seguridad de tu cuenta"
                             onPress={() => router.push("/profile/password")}
+                            colors={colors}
+                            isDark={isDark}
                         />
                     </View>
 
                     {/* Grupo: Pagos */}
-                    <Text style={styles.groupLabel}>PAGOS</Text>
+                    <Text style={themedGroupLabel}>PAGOS</Text>
 
-                    <View style={styles.optionsGroup}>
+                    <View style={themedOptionsGroup}>
                         <OptionRow
                             icon="wallet-outline"
                             label="Metodos de cobro"
@@ -218,31 +245,49 @@ export default function ProfileScreen() {
                             onPress={() => router.push("/profile/yape")}
                             highlight={collectionMethods.length === 0}
                             highlightText="Pendiente"
+                            colors={colors}
+                            isDark={isDark}
                         />
                     </View>
 
                     {/* Grupo: App */}
-                    <Text style={styles.groupLabel}>APP</Text>
+                    <Text style={themedGroupLabel}>APP</Text>
 
-                    <View style={styles.optionsGroup}>
+                    <View style={themedOptionsGroup}>
+                        <ThemeOptionRow
+                            isDark={isDark}
+                            colors={colors}
+                            onToggle={toggleTheme}
+                        />
+                        <View style={[styles.divider, { backgroundColor: colors.border }]} />
                         <OptionRow
                             icon="notifications-outline"
                             label="Notificaciones"
                             sublabel="Actividad y recordatorios"
                             onPress={() => router.push("/activity" as any)}
+                            colors={colors}
+                            isDark={isDark}
                         />
-                        <View style={styles.divider} />
+                        <View style={[styles.divider, { backgroundColor: colors.border }]} />
                         <OptionRow
                             icon="help-circle-outline"
                             label="Ayuda y soporte"
                             sublabel="Preguntas frecuentes"
                             onPress={() => router.push("/profile/help")}
+                            colors={colors}
+                            isDark={isDark}
                         />
                     </View>
 
                     {/* Logout */}
                     <TouchableOpacity
-                        style={styles.logoutButton}
+                        style={[
+                            styles.logoutButton,
+                            {
+                                backgroundColor: isDark ? "rgba(248,113,113,0.10)" : "#FEF2F2",
+                                borderColor: isDark ? "rgba(248,113,113,0.28)" : "#FECACA",
+                            },
+                        ]}
                         onPress={handleLogout}
                         activeOpacity={0.8}
                     >
@@ -251,7 +296,10 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
 
                     {/* Versión */}
-                    <Text style={styles.version}>Versión 1.0.0</Text>
+                    <Text style={[
+                        styles.version,
+                        { color: isDark ? "#475569" : "#CBD5E1" },
+                    ]}>Versión 1.0.0</Text>
                 </Animated.View>
 
             </ScrollView>
@@ -267,6 +315,8 @@ function OptionRow({
                        onPress,
                        highlight = false,
                        highlightText = "",
+                       colors,
+                       isDark,
 }: {
     icon: keyof typeof Ionicons.glyphMap;
     label: string;
@@ -274,25 +324,77 @@ function OptionRow({
     onPress: () => void;
     highlight?: boolean;
     highlightText?: string;
+    colors: typeof COLORS;
+    isDark: boolean;
 }) {
     return (
         <TouchableOpacity style={styles.option} onPress={onPress} activeOpacity={0.7}>
-            <View style={styles.optionIconBox}>
-                <Ionicons name={icon} size={19} color={COLORS.primary} />
+            <View style={[
+                styles.optionIconBox,
+                { backgroundColor: isDark ? "#111827" : "#F1F5F9" },
+            ]}>
+                <Ionicons name={icon} size={19} color={colors.primary} />
             </View>
             <View style={styles.optionTexts}>
-                <Text style={styles.optionLabel}>{label}</Text>
-                {sublabel && <Text style={styles.optionSublabel}>{sublabel}</Text>}
+                <Text style={[styles.optionLabel, { color: colors.text }]}>{label}</Text>
+                {sublabel && (
+                    <Text style={[styles.optionSublabel, { color: colors.subtitle }]}>
+                        {sublabel}
+                    </Text>
+                )}
             </View>
             <View style={styles.optionRight}>
                 {highlight && (
-                    <View style={styles.pendingBadge}>
+                    <View style={[
+                        styles.pendingBadge,
+                        { backgroundColor: isDark ? "rgba(245,158,11,0.16)" : "#FEF3C7" },
+                    ]}>
                         <Text style={styles.pendingText}>{highlightText}</Text>
                     </View>
                 )}
-                <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+                <Ionicons name="chevron-forward" size={18} color={isDark ? "#475569" : "#CBD5E1"} />
             </View>
         </TouchableOpacity>
+    );
+}
+
+function ThemeOptionRow({
+    isDark,
+    colors,
+    onToggle,
+}: {
+    isDark: boolean;
+    colors: typeof COLORS;
+    onToggle: () => void;
+}) {
+    return (
+        <View style={styles.option}>
+            <View style={[
+                styles.optionIconBox,
+                { backgroundColor: isDark ? "#111827" : "#F1F5F9" },
+            ]}>
+                <Ionicons
+                    name={isDark ? "moon" : "moon-outline"}
+                    size={19}
+                    color={colors.primary}
+                />
+            </View>
+            <View style={styles.optionTexts}>
+                <Text style={[styles.optionLabel, { color: colors.text }]}>
+                    Modo oscuro
+                </Text>
+                <Text style={[styles.optionSublabel, { color: colors.subtitle }]}>
+                    Descanso visual para la app
+                </Text>
+            </View>
+            <Switch
+                value={isDark}
+                onValueChange={onToggle}
+                trackColor={{ false: "#CBD5E1", true: "rgba(59,130,246,0.42)" }}
+                thumbColor={isDark ? colors.primary : "#FFFFFF"}
+                ios_backgroundColor="#CBD5E1"
+            />
+        </View>
     );
 }
 
@@ -495,6 +597,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFFFFF",
         borderRadius: 24,
         overflow: "hidden",
+        borderWidth: 1,
         shadowColor: "#94A3B8",
         shadowOpacity: 0.1,
         shadowOffset: { width: 0, height: 4 },

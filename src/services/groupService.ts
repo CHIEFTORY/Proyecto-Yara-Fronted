@@ -96,6 +96,19 @@ export const leaveGroup = async (
 
     return response.data;
 };
+
+export const removeGroupUser = async (
+    groupId: number,
+    userId: number
+) => {
+
+    const response =
+        await api.delete(
+            `/grupos/${groupId}/usuarios/${userId}`
+        );
+
+    return response.data;
+};
 export const getDashboardBalance =
     async () => {
 

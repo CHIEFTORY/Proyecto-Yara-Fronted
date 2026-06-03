@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
 import { useRef } from "react";
-import { COLORS } from "@/src/styles/colors";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/src/context/ThemeContext";
 
 type Props = {
     name: string;
@@ -12,6 +12,7 @@ type Props = {
 };
 
 export default function GroupCard({ name, lastActivity, miBalance, color, onPress }: Props) {
+    const { colors, isDark } = useTheme();
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     const onPressIn  = () => Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
@@ -25,7 +26,14 @@ export default function GroupCard({ name, lastActivity, miBalance, color, onPres
     return (
         <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
             <TouchableOpacity
-                style={styles.card}
+                style={[
+                    styles.card,
+                    {
+                        backgroundColor: colors.card,
+                        borderColor: isDark ? "#1E293B" : "#F1F5F9",
+                        shadowOpacity: isDark ? 0.18 : 0.08,
+                    },
+                ]}
                 activeOpacity={1}
                 onPress={onPress}
                 onPressIn={onPressIn}
@@ -34,22 +42,31 @@ export default function GroupCard({ name, lastActivity, miBalance, color, onPres
                 {/* Avatar con inicial */}
                 <View style={[styles.avatar, { backgroundColor: color }]}>
                     <Text style={styles.avatarText}>{initial}</Text>
-                    <View style={styles.emojiOverlay}>
-                        <Ionicons name="people-outline" size={13} color={COLORS.primary} />
+                    <View style={[
+                        styles.emojiOverlay,
+                        {
+                            backgroundColor: colors.card,
+                            borderColor: isDark ? "#1E293B" : "#F1F5F9",
+                        },
+                    ]}>
+                        <Ionicons name="people-outline" size={13} color={colors.primary} />
                     </View>
                 </View>
 
                 {/* Info */}
                 <View style={styles.info}>
-                    <Text style={styles.name} numberOfLines={1}>{name}</Text>
-                    <Text style={styles.activity} numberOfLines={1}>{lastActivity}</Text>
+                    <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{name}</Text>
+                    <Text style={[styles.activity, { color: colors.subtitle }]} numberOfLines={1}>{lastActivity}</Text>
                 </View>
 
                 {/* Balance */}
                 <View style={styles.balanceCol}>
                     {neutral ? (
-                        <View style={styles.neutralPill}>
-                            <Text style={styles.neutralText}>Al dia</Text>
+                            <View style={[
+                                styles.neutralPill,
+                                { backgroundColor: isDark ? "#111827" : "#F1F5F9" },
+                            ]}>
+                            <Text style={[styles.neutralText, { color: colors.subtitle }]}>Al dia</Text>
                         </View>
                     ) : (
                         <>
@@ -65,7 +82,7 @@ export default function GroupCard({ name, lastActivity, miBalance, color, onPres
                     )}
                 </View>
 
-                <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+                <Ionicons name="chevron-forward" size={18} color={isDark ? "#475569" : "#CBD5E1"} />
             </TouchableOpacity>
         </Animated.View>
     );
@@ -93,7 +110,7 @@ const styles = StyleSheet.create({
         borderWidth: 1.5, borderColor: "#F1F5F9",
     },
     info: { flex: 1 },
-    name: { fontSize: 16, fontWeight: "700", color: COLORS.text, letterSpacing: 0 },
+    name: { fontSize: 16, fontWeight: "700", color: "#111827", letterSpacing: 0 },
     activity: { marginTop: 4, fontSize: 12, color: "#94A3B8", fontWeight: "500" },
     balanceCol: { alignItems: "flex-end", gap: 4, flexShrink: 0 },
     amount: { fontSize: 17, fontWeight: "800", letterSpacing: 0 },

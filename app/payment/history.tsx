@@ -16,6 +16,7 @@ import { getPaymentHistory } from "@/src/services/paymentDebtService";
 import { COLORS } from "@/src/styles/colors";
 import { useAppRefresh } from "@/src/utils/appEvents";
 import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
+import { useTheme } from "@/src/context/ThemeContext";
 
 const STATUS_STYLES: Record<string, { label: string; color: string; bg: string; icon: keyof typeof Ionicons.glyphMap }> = {
     CONFIRMADO: { label: "Confirmado", color: "#15803D", bg: "#DCFCE7", icon: "checkmark-circle" },
@@ -24,6 +25,7 @@ const STATUS_STYLES: Record<string, { label: string; color: string; bg: string; 
 };
 
 export default function PaymentHistoryScreen() {
+    const { colors, isDark } = useTheme();
     const { returnTo } = useLocalSearchParams();
     const shouldReturnToDashboard = returnTo === "dashboard";
     const shouldReturnToActivity = returnTo === "activity";
@@ -110,7 +112,7 @@ export default function PaymentHistoryScreen() {
     }, [visiblePayments]);
 
     return (
-        <SafeAreaView style={styles.safe}>
+        <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
             <StatusBar barStyle="light-content" />
             <AmbientScreenBackground />
 
@@ -146,10 +148,10 @@ export default function PaymentHistoryScreen() {
                 contentContainerStyle={styles.content}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} colors={[COLORS.primary]} />
                 }
             >
-                <View style={styles.summaryCard}>
+                <View style={[styles.summaryCard, { borderColor: colors.border }]}>
                     <Text style={styles.summaryLabel}>Confirmado histórico</Text>
                     <Text style={styles.summaryAmount}>S/ {totalConfirmado.toFixed(2)}</Text>
                     <Text style={styles.summaryText}>
@@ -172,11 +174,15 @@ export default function PaymentHistoryScreen() {
                             ].map(([value, label]) => (
                                 <TouchableOpacity
                                     key={value}
-                                    style={[styles.filterChip, statusFilter === value && styles.filterChipActive]}
+                                    style={[
+                                        styles.filterChip,
+                                        { backgroundColor: colors.card, borderColor: colors.border },
+                                        statusFilter === value && styles.filterChipActive,
+                                    ]}
                                     onPress={() => setStatusFilter(value)}
                                     activeOpacity={0.82}
                                 >
-                                    <Text style={[styles.filterText, statusFilter === value && styles.filterTextActive]}>
+                                    <Text style={[styles.filterText, { color: colors.subtitle }, statusFilter === value && styles.filterTextActive]}>
                                         {label}
                                     </Text>
                                 </TouchableOpacity>
@@ -190,22 +196,30 @@ export default function PaymentHistoryScreen() {
                                 contentContainerStyle={styles.filterRow}
                             >
                                 <TouchableOpacity
-                                    style={[styles.filterChip, groupFilter === "ALL" && styles.filterChipActive]}
+                                    style={[
+                                        styles.filterChip,
+                                        { backgroundColor: colors.card, borderColor: colors.border },
+                                        groupFilter === "ALL" && styles.filterChipActive,
+                                    ]}
                                     onPress={() => setGroupFilter("ALL")}
                                     activeOpacity={0.82}
                                 >
-                                    <Text style={[styles.filterText, groupFilter === "ALL" && styles.filterTextActive]}>
+                                    <Text style={[styles.filterText, { color: colors.subtitle }, groupFilter === "ALL" && styles.filterTextActive]}>
                                         Todos los grupos
                                     </Text>
                                 </TouchableOpacity>
                                 {groupOptions.map(([groupId, groupName]) => (
                                     <TouchableOpacity
                                         key={groupId}
-                                        style={[styles.filterChip, groupFilter === groupId && styles.filterChipActive]}
+                                        style={[
+                                            styles.filterChip,
+                                            { backgroundColor: colors.card, borderColor: colors.border },
+                                            groupFilter === groupId && styles.filterChipActive,
+                                        ]}
                                         onPress={() => setGroupFilter(groupId)}
                                         activeOpacity={0.82}
                                     >
-                                        <Text style={[styles.filterText, groupFilter === groupId && styles.filterTextActive]}>
+                                        <Text style={[styles.filterText, { color: colors.subtitle }, groupFilter === groupId && styles.filterTextActive]}>
                                             {groupName}
                                         </Text>
                                     </TouchableOpacity>
@@ -216,21 +230,21 @@ export default function PaymentHistoryScreen() {
                 )}
 
                 {loading ? (
-                    <View style={styles.stateCard}>
+                    <View style={[styles.stateCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                         <ActivityIndicator color={COLORS.primary} />
-                        <Text style={styles.stateTitle}>Cargando historial</Text>
+                        <Text style={[styles.stateTitle, { color: colors.text }]}>Cargando historial</Text>
                     </View>
                 ) : errorMessage ? (
-                    <View style={styles.stateCard}>
+                    <View style={[styles.stateCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                         <Ionicons name="alert-circle-outline" size={34} color="#DC2626" />
-                        <Text style={styles.stateTitle}>No se pudo cargar</Text>
-                        <Text style={styles.stateText}>{errorMessage}</Text>
+                        <Text style={[styles.stateTitle, { color: colors.text }]}>No se pudo cargar</Text>
+                        <Text style={[styles.stateText, { color: colors.subtitle }]}>{errorMessage}</Text>
                         <TouchableOpacity style={styles.retryButton} onPress={loadHistory}>
                             <Text style={styles.retryText}>Reintentar</Text>
                         </TouchableOpacity>
                     </View>
                 ) : payments.length === 0 ? (
-                    <View style={styles.stateCard}>
+                    <View style={[styles.stateCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                         <Ionicons name="receipt-outline" size={34} color="#94A3B8" />
                         <Text style={styles.stateTitle}>Sin pagos todavía</Text>
                         <Text style={styles.stateText}>
@@ -238,10 +252,10 @@ export default function PaymentHistoryScreen() {
                         </Text>
                     </View>
                 ) : visiblePayments.length === 0 ? (
-                    <View style={styles.stateCard}>
+                    <View style={[styles.stateCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                         <Ionicons name="filter-outline" size={34} color="#94A3B8" />
-                        <Text style={styles.stateTitle}>Sin resultados</Text>
-                        <Text style={styles.stateText}>
+                        <Text style={[styles.stateTitle, { color: colors.text }]}>Sin resultados</Text>
+                        <Text style={[styles.stateText, { color: colors.subtitle }]}>
                             No hay pagos que coincidan con esos filtros. Prueba con otro estado o grupo.
                         </Text>
                     </View>
@@ -249,7 +263,7 @@ export default function PaymentHistoryScreen() {
                     <View style={styles.list}>
                         {groupedVisiblePayments.map((group) => (
                             <View key={group.label} style={styles.dateGroup}>
-                                <Text style={styles.dateGroupTitle}>{group.label}</Text>
+                                <Text style={[styles.dateGroupTitle, { color: colors.text }]}>{group.label}</Text>
                                 {group.items.map((payment) => {
                                     const status = STATUS_STYLES[payment.estado] || {
                                         label: payment.estado || "Pago",
@@ -261,7 +275,14 @@ export default function PaymentHistoryScreen() {
                                     return (
                                         <TouchableOpacity
                                             key={payment.id}
-                                            style={styles.receiptCard}
+                                            style={[
+                                                styles.receiptCard,
+                                                {
+                                                    backgroundColor: colors.card,
+                                                    borderColor: colors.border,
+                                                    shadowColor: isDark ? "#000000" : "#94A3B8",
+                                                },
+                                            ]}
                                             onPress={() => {
                                                 router.push({
                                                     pathname: "/payment/receipt",
@@ -284,7 +305,7 @@ export default function PaymentHistoryScreen() {
                                                         {status.label}
                                                     </Text>
                                                 </View>
-                                                <Text style={styles.receiptDate}>{formatDate(payment.fecha)}</Text>
+                                                <Text style={[styles.receiptDate, { color: colors.subtitle }]}>{formatDate(payment.fecha)}</Text>
                                             </View>
 
                                             <View style={styles.receiptBody}>
@@ -292,10 +313,10 @@ export default function PaymentHistoryScreen() {
                                                     <Ionicons name={methodIcon(payment.metodoTransferencia)} size={20} color={COLORS.primary} />
                                                 </View>
                                                 <View style={styles.receiptInfo}>
-                                                    <Text style={styles.receiptTitle}>
+                                                    <Text style={[styles.receiptTitle, { color: colors.text }]}>
                                                         {payment.deudor} pago a {payment.acreedor}
                                                     </Text>
-                                                    <Text style={styles.receiptMeta}>
+                                                    <Text style={[styles.receiptMeta, { color: colors.subtitle }]}>
                                                         {payment.grupoNombre || "Grupo"} - {payment.metodoPago || "Transferencia"}
                                                     </Text>
                                                 </View>
@@ -305,7 +326,7 @@ export default function PaymentHistoryScreen() {
                                             </View>
 
                                             <View style={styles.receiptFooter}>
-                                                <Text style={styles.receiptCode}>Recibo #{payment.id}</Text>
+                                                <Text style={[styles.receiptCode, { color: colors.subtitle }]}>Recibo #{payment.id}</Text>
                                                 <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
                                             </View>
                                         </TouchableOpacity>

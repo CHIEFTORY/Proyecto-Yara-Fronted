@@ -4,10 +4,12 @@ import { BarChart } from "react-native-chart-kit";
 import { COLORS } from "@/src/styles/colors";
 import { getExpenseChart } from "@/src/services/expenseService";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/src/context/ThemeContext";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function ExpenseChart() {
+    const { colors, isDark } = useTheme();
     const [chartData, setChartData] = useState<{ mes: string; total: number }[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -28,16 +30,26 @@ export default function ExpenseChart() {
     const maxMes = chartData.reduce((max, d) => d.total > (max?.total ?? 0) ? d : max, chartData[0]);
 
     return (
-        <View style={styles.card}>
+        <View style={[
+            styles.card,
+            {
+                backgroundColor: colors.card,
+                borderColor: isDark ? "#1E293B" : "#F1F5F9",
+                shadowOpacity: isDark ? 0.16 : 0.08,
+            },
+        ]}>
 
             {/* Header con resumen */}
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.eyebrow}>RESUMEN</Text>
-                    <Text style={styles.title}>Gastos mensuales</Text>
+                    <Text style={[styles.eyebrow, { color: colors.primary }]}>RESUMEN</Text>
+                    <Text style={[styles.title, { color: colors.text }]}>Gastos mensuales</Text>
                 </View>
                 {!loading && chartData.length > 0 && (
-                    <View style={styles.totalPill}>
+                    <View style={[
+                        styles.totalPill,
+                        { backgroundColor: isDark ? "rgba(37,99,235,0.18)" : "#EEF2FF" },
+                    ]}>
                         <Text style={styles.totalLabel}>Total</Text>
                         <Text style={styles.totalAmount}>S/ {total.toFixed(0)}</Text>
                     </View>
@@ -46,24 +58,30 @@ export default function ExpenseChart() {
 
             {/* Máximo del periodo */}
             {!loading && maxMes && (
-                <View style={styles.peakRow}>
+                <View style={[
+                    styles.peakRow,
+                    { backgroundColor: isDark ? "#111827" : "#F8FAFC" },
+                ]}>
                     <Ionicons name="trending-up-outline" size={15} color={COLORS.primary} />
-                    <Text style={styles.peakText}>
-                        Pico en <Text style={styles.peakBold}>{maxMes.mes}</Text> - S/ {maxMes.total.toFixed(0)}
+                    <Text style={[styles.peakText, { color: colors.subtitle }]}>
+                        Pico en <Text style={[styles.peakBold, { color: colors.text }]}>{maxMes.mes}</Text> - S/ {maxMes.total.toFixed(0)}
                     </Text>
                 </View>
             )}
 
             {loading ? (
                 <View style={styles.loadingBox}>
-                    <Text style={styles.loadingText}>Cargando gráfico...</Text>
+                    <Text style={[styles.loadingText, { color: colors.subtitle }]}>Cargando gráfico...</Text>
                 </View>
             ) : chartData.length === 0 ? (
                 <View style={styles.emptyBox}>
-                    <View style={styles.emptyIconBox}>
+                    <View style={[
+                        styles.emptyIconBox,
+                        { backgroundColor: isDark ? "rgba(37,99,235,0.18)" : "#EEF2FF" },
+                    ]}>
                         <Ionicons name="bar-chart-outline" size={28} color={COLORS.primary} />
                     </View>
-                    <Text style={styles.emptyText}>Sin datos todavía</Text>
+                    <Text style={[styles.emptyText, { color: colors.subtitle }]}>Sin datos todavía</Text>
                 </View>
             ) : (
                 <BarChart
@@ -78,13 +96,13 @@ export default function ExpenseChart() {
                     fromZero
                     showValuesOnTopOfBars={false}
                     chartConfig={{
-                        backgroundGradientFrom: "#FFFFFF",
-                        backgroundGradientTo: "#FFFFFF",
+                        backgroundGradientFrom: colors.card,
+                        backgroundGradientTo: colors.card,
                         decimalPlaces: 0,
                         color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
-                        labelColor: () => "#94A3B8",
+                        labelColor: () => isDark ? "#64748B" : "#94A3B8",
                         barPercentage: 0.65,
-                        propsForBackgroundLines: { stroke: "#F1F5F9", strokeDasharray: "4 4" },
+                        propsForBackgroundLines: { stroke: isDark ? "#1E293B" : "#F1F5F9", strokeDasharray: "4 4" },
                         propsForLabels: { fontSize: 11, fontWeight: "600" },
                     }}
                     style={styles.chart}

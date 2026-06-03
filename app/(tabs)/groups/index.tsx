@@ -23,6 +23,7 @@ import { getMyGroups } from "@/src/services/groupService";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppRefresh } from "@/src/utils/appEvents";
 import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
+import { useTheme } from "@/src/context/ThemeContext";
 
 // ─── Paleta navy premium ───────────────────────────────────────────────────────
 const NAVY   = "#0F1F5C";
@@ -33,6 +34,7 @@ const WHITE  = "#FFFFFF";
 // ─── Screen ───────────────────────────────────────────────────────────────────
 export default function GroupsScreen() {
 
+    const { colors, isDark } = useTheme();
     const [groups, setGroups] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const fadeAnim  = useRef(new Animated.Value(0)).current;
@@ -66,9 +68,9 @@ export default function GroupsScreen() {
 
     if (loading) {
         return (
-            <View style={styles.loaderContainer}>
+            <View style={[styles.loaderContainer, { backgroundColor: colors.background }]}>
                 <ActivityIndicator size="large" color={ACCENT} />
-                <Text style={styles.loaderText}>Cargando grupos…</Text>
+                <Text style={[styles.loaderText, { color: colors.subtitle }]}>Cargando grupos…</Text>
             </View>
         );
     }
@@ -76,8 +78,8 @@ export default function GroupsScreen() {
     const debtCount = groups.filter(g => (g.miBalance || 0) < 0).length;
 
     return (
-        <View style={styles.root}>
-            <StatusBar barStyle="dark-content" />
+        <View style={[styles.root, { backgroundColor: colors.background }]}>
+            <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
             <AmbientScreenBackground />
 
             <ScrollView
@@ -93,8 +95,8 @@ export default function GroupsScreen() {
                     ]}
                 >
                     <View style={styles.headerLeft}>
-                        <Text style={styles.title}>Mis grupos</Text>
-                        <Text style={styles.subtitle}>
+                        <Text style={[styles.title, { color: colors.text }]}>Mis grupos</Text>
+                        <Text style={[styles.subtitle, { color: colors.subtitle }]}>
                             {groups.length === 0
                                 ? "Crea el primero y empieza a dividir"
                                 : debtCount > 0
@@ -143,7 +145,7 @@ export default function GroupsScreen() {
                         <EmptyState />
                     ) : (
                         <>
-                            <Text style={styles.listLabel}>Recientes</Text>
+                            <Text style={[styles.listLabel, { color: colors.subtitle }]}>Recientes</Text>
                             {groups.map((group: any, index: number) => {
                                 const groupColor = group.color || NAVY;
                                 const balance    = group.miBalance || 0;
@@ -182,13 +184,27 @@ function StatCard({
     iconBg: string;
     valueColor?: string;
 }) {
+    const { colors, isDark } = useTheme();
+    const safeIconBg = isDark
+        ? iconColor === "#DC2626"
+            ? "rgba(248,113,113,0.14)"
+            : "rgba(59,130,246,0.16)"
+        : iconBg;
+
     return (
-        <View style={styles.statCard}>
-            <View style={[styles.statIconWrap, { backgroundColor: iconBg }]}>
+        <View style={[
+            styles.statCard,
+            {
+                backgroundColor: colors.card,
+                borderColor: isDark ? "#1E293B" : "rgba(0,0,0,0.05)",
+                shadowOpacity: isDark ? 0.18 : 0.07,
+            },
+        ]}>
+            <View style={[styles.statIconWrap, { backgroundColor: safeIconBg }]}>
                 <Ionicons name={iconName} size={17} color={iconColor} />
             </View>
-            <Text style={[styles.statValue, valueColor ? { color: valueColor } : {}]}>{value}</Text>
-            <Text style={styles.statLabel}>{label}</Text>
+            <Text style={[styles.statValue, { color: valueColor || colors.text }]}>{value}</Text>
+            <Text style={[styles.statLabel, { color: colors.subtitle }]}>{label}</Text>
         </View>
     );
 }
@@ -203,13 +219,21 @@ function GroupCard({
     neutro: boolean;
     delay: number;
 }) {
+    const { colors, isDark } = useTheme();
     const balanceBg    = neutro ? "#F1F5F9"  : positivo ? "#DCFCE7" : "#FEE2E2";
     const balanceColor = neutro ? "#94A3B8"  : positivo ? "#16A34A" : "#DC2626";
     const balanceLabel = neutro ? "Al día"   : `${positivo ? "+" : ""}S/ ${Math.abs(balance).toFixed(0)}`;
 
     return (
         <TouchableOpacity
-            style={styles.groupCard}
+            style={[
+                styles.groupCard,
+                {
+                    backgroundColor: colors.card,
+                    borderColor: isDark ? "#1E293B" : "rgba(0,0,0,0.05)",
+                    shadowOpacity: isDark ? 0.18 : 0.08,
+                },
+            ]}
             onPress={() => router.push(`/groups/${group.id}` as any)}
             activeOpacity={0.78}
         >
@@ -217,7 +241,10 @@ function GroupCard({
             <View style={[styles.cardAccent, { backgroundColor: groupColor }]} />
 
             {/* Avatar */}
-            <View style={[styles.avatar, { backgroundColor: `${groupColor}1A` }]}>
+            <View style={[
+                styles.avatar,
+                { backgroundColor: isDark ? "rgba(59,130,246,0.14)" : `${groupColor}1A` },
+            ]}>
                 <Text style={[styles.avatarText, { color: groupColor }]}>
                     {group.nombre?.charAt(0)?.toUpperCase()}
                 </Text>
@@ -225,10 +252,10 @@ function GroupCard({
 
             {/* Info */}
             <View style={styles.groupInfo}>
-                <Text style={styles.groupName} numberOfLines={1}>{group.nombre}</Text>
+                <Text style={[styles.groupName, { color: colors.text }]} numberOfLines={1}>{group.nombre}</Text>
                 <View style={styles.groupMeta}>
-                    <Ionicons name="people-outline" size={12} color="#94A3B8" />
-                    <Text style={styles.memberText}>
+                    <Ionicons name="people-outline" size={12} color={colors.subtitle} />
+                    <Text style={[styles.memberText, { color: colors.subtitle }]}>
                         {group.cantidadMiembros || "–"} miembros
                     </Text>
                 </View>
@@ -236,10 +263,17 @@ function GroupCard({
 
             {/* Balance + flecha */}
             <View style={styles.groupRight}>
-                <View style={[styles.balancePill, { backgroundColor: balanceBg }]}>
+                <View style={[
+                    styles.balancePill,
+                    {
+                        backgroundColor: isDark
+                            ? neutro ? "#111827" : positivo ? "rgba(16,185,129,0.16)" : "rgba(248,113,113,0.14)"
+                            : balanceBg,
+                    },
+                ]}>
                     <Text style={[styles.balanceText, { color: balanceColor }]}>{balanceLabel}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="#CBD5E1" style={{ marginTop: 4 }} />
+                <Ionicons name="chevron-forward" size={16} color={isDark ? "#475569" : "#CBD5E1"} style={{ marginTop: 4 }} />
             </View>
         </TouchableOpacity>
     );

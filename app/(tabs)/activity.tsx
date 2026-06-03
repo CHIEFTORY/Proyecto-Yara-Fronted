@@ -32,6 +32,7 @@ import {
 import {
     COLORS,
 } from "@/src/styles/colors";
+import { useTheme } from "@/src/context/ThemeContext";
 
 import {
     formatTimeAgo,
@@ -116,6 +117,7 @@ const getNotificationAction = (notification: NotificationItem) => {
 };
 
 export default function ActivityPage() {
+    const { colors, isDark } = useTheme();
 
     const {
         tab,
@@ -212,22 +214,22 @@ export default function ActivityPage() {
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
+            <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
                 <ActivityIndicator size="large" color={COLORS.primary} />
-                <Text style={styles.loadingText}>Cargando actividad...</Text>
+                <Text style={[styles.loadingText, { color: colors.subtitle }]}>Cargando actividad...</Text>
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="dark-content" />
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+            <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
             {/* ── HEADER ── */}
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.title}>Actividad</Text>
-                    <Text style={styles.subtitle}>
+                    <Text style={[styles.title, { color: colors.text }]}>Actividad</Text>
+                    <Text style={[styles.subtitle, { color: colors.subtitle }]}>
                         {activeTab === "ACTIVITY"
                             ? unreadCount === 0
                                 ? "Todo al día"
@@ -243,6 +245,11 @@ export default function ActivityPage() {
                     <TouchableOpacity
                         style={[
                             styles.markAllButton,
+                            {
+                                backgroundColor: colors.card,
+                                borderColor: colors.border,
+                                shadowColor: isDark ? "#000000" : "#94A3B8",
+                            },
                             unreadCount === 0 && styles.markAllButtonDisabled,
                         ]}
                         onPress={handleMarkAll}
@@ -262,13 +269,13 @@ export default function ActivityPage() {
             </View>
 
             {/* ── TABS ── */}
-            <View style={styles.tabs}>
+            <View style={[styles.tabs, { backgroundColor: isDark ? "#111827" : "#E2E8F0" }]}>
                 <TouchableOpacity
-                    style={[styles.tabButton, activeTab === "ACTIVITY" && styles.tabActive]}
+                    style={[styles.tabButton, activeTab === "ACTIVITY" && [styles.tabActive, { backgroundColor: colors.card }]]}
                     onPress={() => setActiveTab("ACTIVITY")}
                     activeOpacity={0.75}
                 >
-                    <Text style={[styles.tabText, activeTab === "ACTIVITY" && styles.tabTextActive]}>
+                    <Text style={[styles.tabText, { color: colors.subtitle }, activeTab === "ACTIVITY" && styles.tabTextActive]}>
                         Actividad
                     </Text>
                     {unreadCount > 0 && (
@@ -279,11 +286,11 @@ export default function ActivityPage() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={[styles.tabButton, activeTab === "REQUESTS" && styles.tabActive]}
+                    style={[styles.tabButton, activeTab === "REQUESTS" && [styles.tabActive, { backgroundColor: colors.card }]]}
                     onPress={() => setActiveTab("REQUESTS")}
                     activeOpacity={0.75}
                 >
-                    <Text style={[styles.tabText, activeTab === "REQUESTS" && styles.tabTextActive]}>
+                    <Text style={[styles.tabText, { color: colors.subtitle }, activeTab === "REQUESTS" && styles.tabTextActive]}>
                         Solicitudes
                     </Text>
                     {invitations.length > 0 && (
@@ -297,7 +304,13 @@ export default function ActivityPage() {
             {/* ── LISTA ── */}
             {activeTab === "ACTIVITY" && invitations.length > 0 && (
                 <TouchableOpacity
-                    style={styles.requestsNotice}
+                    style={[
+                        styles.requestsNotice,
+                        {
+                            backgroundColor: isDark ? "rgba(217,119,6,0.12)" : "#FFFBEB",
+                            borderColor: isDark ? "rgba(217,119,6,0.28)" : "#FDE68A",
+                        },
+                    ]}
                     onPress={() => setActiveTab("REQUESTS")}
                     activeOpacity={0.84}
                 >
@@ -305,10 +318,10 @@ export default function ActivityPage() {
                         <Ionicons name="mail-unread-outline" size={20} color="#B45309" />
                     </View>
                     <View style={styles.requestsNoticeTextWrap}>
-                        <Text style={styles.requestsNoticeTitle}>
+                        <Text style={[styles.requestsNoticeTitle, { color: isDark ? "#FDE68A" : "#92400E" }]}>
                             Tienes solicitudes pendientes
                         </Text>
-                        <Text style={styles.requestsNoticeText}>
+                        <Text style={[styles.requestsNoticeText, { color: isDark ? "#FBBF24" : "#B45309" }]}>
                             Revisa invitaciones antes de entrar a esos grupos.
                         </Text>
                     </View>
@@ -322,20 +335,28 @@ export default function ActivityPage() {
             {activeTab === "ACTIVITY" && (
                 <View style={styles.readFilters}>
                     <TouchableOpacity
-                        style={[styles.readFilterChip, activityView === "ALL" && styles.readFilterChipActive]}
+                        style={[
+                            styles.readFilterChip,
+                            { backgroundColor: colors.card, borderColor: colors.border },
+                            activityView === "ALL" && styles.readFilterChipActive,
+                        ]}
                         onPress={() => setActivityView("ALL")}
                         activeOpacity={0.8}
                     >
-                        <Text style={[styles.readFilterText, activityView === "ALL" && styles.readFilterTextActive]}>
+                        <Text style={[styles.readFilterText, { color: colors.subtitle }, activityView === "ALL" && styles.readFilterTextActive]}>
                             Todas
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={[styles.readFilterChip, activityView === "UNREAD" && styles.readFilterChipActive]}
+                        style={[
+                            styles.readFilterChip,
+                            { backgroundColor: colors.card, borderColor: colors.border },
+                            activityView === "UNREAD" && styles.readFilterChipActive,
+                        ]}
                         onPress={() => setActivityView("UNREAD")}
                         activeOpacity={0.8}
                     >
-                        <Text style={[styles.readFilterText, activityView === "UNREAD" && styles.readFilterTextActive]}>
+                        <Text style={[styles.readFilterText, { color: colors.subtitle }, activityView === "UNREAD" && styles.readFilterTextActive]}>
                             Sin leer
                         </Text>
                         {unreadCount > 0 && (
@@ -360,6 +381,7 @@ export default function ActivityPage() {
                         refreshing={refreshing}
                         onRefresh={handleRefresh}
                         tintColor={COLORS.primary}
+                        colors={[COLORS.primary]}
                     />
                 }
                 showsVerticalScrollIndicator={false}
@@ -369,16 +391,16 @@ export default function ActivityPage() {
                     if (activeTab === "REQUESTS") {
                         const invitation = item as InvitationItem;
                         return (
-                            <View style={styles.invitationCard}>
+                            <View style={[styles.invitationCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                                 <View style={styles.invitationIconBox}>
                                     <Ionicons name="people-outline" size={22} color="#0891B2" />
                                 </View>
 
                                 <View style={styles.invitationContent}>
-                                    <Text style={styles.invitationTitle}>
+                                    <Text style={[styles.invitationTitle, { color: colors.text }]}>
                                         Invitación a grupo
                                     </Text>
-                                    <Text style={styles.invitationMsg}>
+                                    <Text style={[styles.invitationMsg, { color: colors.subtitle }]}>
                                         <Text style={styles.bold}>{invitation.emisorNombre}</Text>
                                         {" te invitó a "}
                                         <Text style={styles.bold}>{invitation.grupoNombre}</Text>
@@ -408,7 +430,7 @@ export default function ActivityPage() {
                                         </TouchableOpacity>
 
                                         <TouchableOpacity
-                                            style={styles.rejectButton}
+                                            style={[styles.rejectButton, { backgroundColor: isDark ? "rgba(248,113,113,0.12)" : "#FEF2F2" }]}
                                             activeOpacity={0.8}
                                             onPress={async () => {
                                                 try {
@@ -446,6 +468,12 @@ export default function ActivityPage() {
                                 styles.card,
                                 !isUnread && styles.cardRead,
                                 isUnread && styles.cardUnread,
+                                {
+                                    backgroundColor: colors.card,
+                                    borderColor: colors.border,
+                                    shadowColor: isDark ? "#000000" : "#94A3B8",
+                                },
+                                isUnread && { backgroundColor: isDark ? "#111827" : "#F8FBFF" },
                                 isMarking && styles.cardMarking,
                             ]}
                             onPress={() => handleMarkAsRead(notification)}
@@ -472,7 +500,7 @@ export default function ActivityPage() {
 
                                     <View style={styles.cardTopRight}>
                                         {isUnread && <View style={styles.unreadDot} />}
-                                        <Text style={styles.time}>
+                                        <Text style={[styles.time, { color: colors.subtitle }]}>
                                             {formatTimeAgo(notification.fecha, now)}
                                         </Text>
                                     </View>
@@ -482,7 +510,7 @@ export default function ActivityPage() {
                                     <Text style={styles.groupTag}>{notification.grupoNombre}</Text>
                                 )}
 
-                                <Text style={styles.message}>
+                                <Text style={[styles.message, { color: colors.text }]}>
                                     {notification.mensaje || "Actividad registrada"}
                                 </Text>
                                 {isMarking && (
@@ -507,21 +535,21 @@ export default function ActivityPage() {
                 }}
                 ListEmptyComponent={
                     <View style={styles.emptyState}>
-                        <View style={styles.emptyIconBox}>
+                        <View style={[styles.emptyIconBox, { backgroundColor: isDark ? "rgba(59,130,246,0.16)" : "#EEF2FF" }]}>
                             <Ionicons
                                 name={activeTab === "ACTIVITY" ? "notifications-outline" : "people-outline"}
                                 size={40}
                                 color={COLORS.primary}
                             />
                         </View>
-                        <Text style={styles.emptyTitle}>
+                        <Text style={[styles.emptyTitle, { color: colors.text }]}>
                             {activeTab === "ACTIVITY"
                                 ? activityView === "UNREAD"
                                     ? "Todo leido"
                                     : "Sin actividad"
                                 : "Sin solicitudes"}
                         </Text>
-                        <Text style={styles.emptyText}>
+                        <Text style={[styles.emptyText, { color: colors.subtitle }]}>
                             {activeTab === "ACTIVITY"
                                 ? "Tus gastos, pagos y movimientos aparecerán aquí."
                                 : "No tienes invitaciones pendientes por ahora."}

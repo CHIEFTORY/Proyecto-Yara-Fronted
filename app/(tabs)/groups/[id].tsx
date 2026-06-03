@@ -41,6 +41,7 @@ import { useRelativeTimeTick } from "@/src/hooks/useRelativeTimeTick";
 import { useToast } from "@/src/context/ToastContext";
 import { emitAppEvent, useAppRefresh } from "@/src/utils/appEvents";
 import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
+import { useTheme } from "@/src/context/ThemeContext";
 
 import {
     getGroupSummary,
@@ -48,7 +49,21 @@ import {
     deleteGroup,
     leaveGroup,
     makeAdmin,
+    removeGroupUser,
 } from "@/src/services/groupService";
+
+const getBackendMessage = (
+    error: any,
+    fallback: string
+) => {
+    const data = error?.response?.data;
+
+    if (typeof data === "string") {
+        return data;
+    }
+
+    return data?.message || fallback;
+};
 
 const buildGroupPayDebtRoute = (groupId: string | string[], deuda: any) => {
     const methods = encodeURIComponent(JSON.stringify(
@@ -62,6 +77,7 @@ const buildGroupPayDebtRoute = (groupId: string | string[], deuda: any) => {
 };
 
 export default function GroupDetailScreen() {
+    const { colors, isDark } = useTheme();
 
     const { id, returnTo } = useLocalSearchParams();
 
@@ -95,8 +111,10 @@ export default function GroupDetailScreen() {
                     } catch (error: any) {
                         Alert.alert(
                             "No puedes salir",
-                            error?.response?.data?.message ||
-                            "Debes asignar otro administrador antes de salir del grupo."
+                            getBackendMessage(
+                                error,
+                                "Resuelve los pendientes del grupo antes de salir."
+                            )
                         );
                     }
                 }
@@ -126,8 +144,14 @@ export default function GroupDetailScreen() {
                         await deleteGroup(Number(id));
                         emitAppEvent("groups", "dashboard", "badge");
                         router.replace("/groups" as any);
-                    } catch (error) {
-                        console.log(error);
+                    } catch (error: any) {
+                        Alert.alert(
+                            "No puedes eliminar el grupo",
+                            getBackendMessage(
+                                error,
+                                "Resuelve los saldos y pagos pendientes antes de eliminarlo."
+                            )
+                        );
                     }
                 }
             });
@@ -203,9 +227,9 @@ export default function GroupDetailScreen() {
 
     if (loading) {
         return (
-            <View style={styles.loaderContainer}>
+            <View style={[styles.loaderContainer, { backgroundColor: colors.background }]}>
                 <ActivityIndicator size="large" color={COLORS.primary} />
-                <Text style={styles.loaderText}>Cargando grupo...</Text>
+                <Text style={[styles.loaderText, { color: colors.subtitle }]}>Cargando grupo...</Text>
             </View>
         );
     }
@@ -216,7 +240,7 @@ export default function GroupDetailScreen() {
     const backTarget = returnTo === "dashboard" ? "/(tabs)" : "/groups";
 
     return (
-        <View style={styles.root}>
+        <View style={[styles.root, { backgroundColor: colors.background }]}>
             <StatusBar barStyle="light-content" />
             <AmbientScreenBackground intensity="medium" />
 
@@ -321,7 +345,7 @@ export default function GroupDetailScreen() {
                 </Animated.View>
 
                 {/* ── TABS ── */}
-                <Animated.View style={[styles.tabs, { opacity: fadeAnim }]}>
+                <Animated.View style={[styles.tabs, { opacity: fadeAnim, backgroundColor: isDark ? "#111827" : "#FFFFFF", borderColor: colors.border }]}>
                     {["balances", "gastos", "pagos"].map((tab) => (
                         <TouchableOpacity
                             key={tab}
@@ -329,7 +353,7 @@ export default function GroupDetailScreen() {
                             onPress={() => setActiveTab(tab)}
                             activeOpacity={0.75}
                         >
-                            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+                            <Text style={[styles.tabText, { color: colors.subtitle }, activeTab === tab && styles.activeTabText]}>
                                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
                             </Text>
                         </TouchableOpacity>
@@ -342,7 +366,7 @@ export default function GroupDetailScreen() {
 
                         {/* Miembros */}
                         <View style={styles.listContainer}>
-                            <Text style={styles.subSectionTitle}>Miembros</Text>
+                            <Text style={[styles.subSectionTitle, { color: colors.text }]}>Miembros</Text>
                             {users.map((user) => {
                                 const balance = summary?.balances?.find(
                                     (b: any) => b.usuarioId === user.id
@@ -352,7 +376,7 @@ export default function GroupDetailScreen() {
                                 const emptyBalance = monto === 0;
 
                                 return (
-                                    <View key={user.id} style={styles.userCard}>
+                                    <View key={user.id} style={[styles.userCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                                         <View style={[
                                             styles.avatar,
                                             { backgroundColor: positive ? "#DCFCE7" : emptyBalance ? "#E0E7FF" : "#FEE2E2" }
@@ -367,7 +391,7 @@ export default function GroupDetailScreen() {
 
                                         <View style={styles.userInfo}>
                                             <View style={styles.nameRow}>
-                                                <Text numberOfLines={1} style={styles.userName}>
+                                                <Text numberOfLines={1} style={[styles.userName, { color: colors.text }]}>
                                                     {user.nombre}
                                                 </Text>
                                                 {user.rol === "ADMIN" && (
@@ -400,6 +424,30 @@ export default function GroupDetailScreen() {
                                                                             });
                                                                         }
                                                                     }
+                                                                },
+                                                                {
+                                                                    text: "Eliminar del grupo",
+                                                                    style: "destructive",
+                                                                    onPress: async () => {
+                                                                        try {
+                                                                            await removeGroupUser(Number(id), user.id);
+                                                                            emitAppEvent("group", "groups", "dashboard", "payments", "activity");
+                                                                            toast.showToast({
+                                                                                type: "success",
+                                                                                title: "Miembro eliminado",
+                                                                                message: `${user.nombre} ya no pertenece al grupo.`,
+                                                                            });
+                                                                            loadGroup();
+                                                                        } catch (error: any) {
+                                                                            Alert.alert(
+                                                                                "No puedes eliminarlo",
+                                                                                getBackendMessage(
+                                                                                    error,
+                                                                                    "Resuelve los pendientes de este miembro antes de eliminarlo."
+                                                                                )
+                                                                            );
+                                                                        }
+                                                                    }
                                                                 }
                                                             ]);
                                                         }}
@@ -409,7 +457,7 @@ export default function GroupDetailScreen() {
                                                 )}
                                             </View>
 
-                                            <Text numberOfLines={1} style={styles.userEmail}>
+                                            <Text numberOfLines={1} style={[styles.userEmail, { color: colors.subtitle }]}>
                                                 {user.email}
                                             </Text>
                                         </View>
@@ -419,7 +467,7 @@ export default function GroupDetailScreen() {
                                             styles.balancePill,
                                             {
                                                 backgroundColor:
-                                                    emptyBalance ? "#F1F5F9" :
+                                                    emptyBalance ? (isDark ? "#111827" : "#F1F5F9") :
                                                         positive ? "#DCFCE7" : "#FEE2E2"
                                             }
                                         ]}>
@@ -452,24 +500,24 @@ export default function GroupDetailScreen() {
 
                         {/* Deudas pendientes */}
                         <View style={styles.listContainer}>
-                            <Text style={styles.subSectionTitle}>Deudas pendientes</Text>
+                            <Text style={[styles.subSectionTitle, { color: colors.text }]}>Deudas pendientes</Text>
 
                             {summary?.deudas?.length === 0 ? (
-                                <View style={styles.emptyMini}>
+                                <View style={[styles.emptyMini, { backgroundColor: colors.card, borderColor: colors.border }]}>
                                     <Ionicons name="checkmark-circle-outline" size={36} color="#16A34A" />
-                                    <Text style={styles.emptyMiniText}>Sin deudas pendientes</Text>
-                                    <Text style={styles.emptyMiniSubText}>
+                                    <Text style={[styles.emptyMiniText, { color: colors.text }]}>Sin deudas pendientes</Text>
+                                    <Text style={[styles.emptyMiniSubText, { color: colors.subtitle }]}>
                                         Cuando registres gastos compartidos, aqui veras quien debe pagarle a quien.
                                     </Text>
                                 </View>
                             ) : (
                                 summary?.deudas?.map((deuda: any, index: number) => (
-                                    <View key={index} style={styles.debtCard}>
+                                    <View key={index} style={[styles.debtCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                                         <View style={styles.debtIconBox}>
                                             <Ionicons name="cash-outline" size={19} color="#B45309" />
                                         </View>
                                         <View style={{ flex: 1 }}>
-                                            <Text style={styles.debtDescription}>
+                                            <Text style={[styles.debtDescription, { color: colors.text }]}>
                                                 <Text style={styles.bold}>{deuda.deudor}</Text>
                                                 {" debe a "}
                                                 <Text style={styles.bold}>{deuda.acreedor}</Text>
@@ -501,15 +549,15 @@ export default function GroupDetailScreen() {
                 {/* ── TAB: GASTOS ── */}
                 {activeTab === "gastos" && (
                     <Animated.View style={[styles.listContainer, { opacity: fadeAnim }]}>
-                        <Text style={styles.subSectionTitle}>
+                        <Text style={[styles.subSectionTitle, { color: colors.text }]}>
                             {expenses.length} gasto{expenses.length !== 1 ? "s" : ""} registrado{expenses.length !== 1 ? "s" : ""}
                         </Text>
 
                         {expenses.length === 0 ? (
-                            <View style={styles.emptyMini}>
+                            <View style={[styles.emptyMini, { backgroundColor: colors.card, borderColor: colors.border }]}>
                                 <Ionicons name="receipt-outline" size={36} color={COLORS.primary} />
-                                <Text style={styles.emptyMiniText}>No hay gastos registrados</Text>
-                                <Text style={styles.emptyMiniSubText}>
+                                <Text style={[styles.emptyMiniText, { color: colors.text }]}>No hay gastos registrados</Text>
+                                <Text style={[styles.emptyMiniSubText, { color: colors.subtitle }]}>
                                     {users.length <= 1
                                         ? "Invita a alguien para dividir gastos con otra persona."
                                         : "Crea el primer gasto para empezar a calcular balances."}
@@ -538,7 +586,7 @@ export default function GroupDetailScreen() {
                                 return (
                                 <TouchableOpacity
                                     key={expense.id}
-                                    style={styles.expenseCard}
+                                    style={[styles.expenseCard, { backgroundColor: colors.card, borderColor: colors.border }]}
                                     onPress={() => {
                                         router.push(
                                             `/groups/${id}/expense-detail?expenseId=${expense.id}` as any
@@ -551,8 +599,8 @@ export default function GroupDetailScreen() {
                                             <Ionicons name="receipt-outline" size={20} color={COLORS.primary} />
                                         </View>
                                         <View style={{ flex: 1 }}>
-                                            <Text style={styles.expenseTitle}>{expense.descripcion}</Text>
-                                            <Text style={styles.expenseSubtitle}>Pagó {expense.pagadoPor}</Text>
+                                            <Text style={[styles.expenseTitle, { color: colors.text }]}>{expense.descripcion}</Text>
+                                            <Text style={[styles.expenseSubtitle, { color: colors.subtitle }]}>Pagó {expense.pagadoPor}</Text>
                                             {firstCategory && (
                                                 <View style={styles.categoryBadge}>
                                                     <Ionicons
@@ -563,7 +611,7 @@ export default function GroupDetailScreen() {
                                                     <Text style={styles.categoryBadgeText}>{firstCategory}</Text>
                                                 </View>
                                             )}
-                                            <Text style={styles.expenseTime}>{formatTimeAgo(expense.fecha, now)}</Text>
+                                            <Text style={[styles.expenseTime, { color: colors.subtitle }]}>{formatTimeAgo(expense.fecha, now)}</Text>
                                         </View>
                                     </View>
 
@@ -606,32 +654,32 @@ export default function GroupDetailScreen() {
                 {/* ── TAB: PAGOS ── */}
                 {activeTab === "pagos" && (
                     <Animated.View style={[styles.listContainer, { opacity: fadeAnim }]}>
-                        <Text style={styles.subSectionTitle}>
+                        <Text style={[styles.subSectionTitle, { color: colors.text }]}>
                             {payments.length} pago{payments.length !== 1 ? "s" : ""} registrado{payments.length !== 1 ? "s" : ""}
                         </Text>
 
                         {payments.length === 0 ? (
-                            <View style={styles.emptyMini}>
+                            <View style={[styles.emptyMini, { backgroundColor: colors.card, borderColor: colors.border }]}>
                                 <Ionicons name="card-outline" size={36} color={COLORS.primary} />
-                                <Text style={styles.emptyMiniText}>No hay pagos registrados</Text>
-                                <Text style={styles.emptyMiniSubText}>
+                                <Text style={[styles.emptyMiniText, { color: colors.text }]}>No hay pagos registrados</Text>
+                                <Text style={[styles.emptyMiniSubText, { color: colors.subtitle }]}>
                                     Aparecerán cuando alguien pague una deuda y el acreedor la confirme.
                                 </Text>
                             </View>
                         ) : (
                             payments.map((payment) => (
-                                <View key={payment.id} style={styles.expenseCard}>
+                                <View key={payment.id} style={[styles.expenseCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                                     <View style={styles.expenseLeft}>
                                         <View style={[styles.expenseIcon, { backgroundColor: "#DCFCE7" }]}>
                                             <Ionicons name="checkmark-circle-outline" size={20} color="#16A34A" />
                                         </View>
                                         <View style={{ flex: 1 }}>
-                                            <Text style={styles.expenseTitle}>{payment.deudor}</Text>
-                                            <Text style={styles.expenseSubtitle}>Pagó a {payment.acreedor}</Text>
+                                            <Text style={[styles.expenseTitle, { color: colors.text }]}>{payment.deudor}</Text>
+                                            <Text style={[styles.expenseSubtitle, { color: colors.subtitle }]}>Pagó a {payment.acreedor}</Text>
                                             <View style={styles.metodoPagoBadge}>
                                                 <Text style={styles.metodoPagoText}>{payment.metodoPago}</Text>
                                             </View>
-                                            <Text style={styles.expenseTime}>{formatTimeAgo(payment.fecha, now)}</Text>
+                                            <Text style={[styles.expenseTime, { color: colors.subtitle }]}>{formatTimeAgo(payment.fecha, now)}</Text>
                                         </View>
                                     </View>
                                     <Text style={[styles.expenseAmount, { color: "#16A34A" }]}>

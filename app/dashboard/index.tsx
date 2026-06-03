@@ -16,6 +16,7 @@ import { getToken } from "@/src/utils/authStorage";
 import { getMeRequest } from "@/src/services/authService";
 import { COLORS } from "@/src/styles/colors";
 import { useAppRefresh } from "@/src/utils/appEvents";
+import { useTheme } from "@/src/context/ThemeContext";
 
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
@@ -43,6 +44,7 @@ const SURFACE = "#EEF4FF";
 
 export default function DashboardScreen() {
 
+    const { colors, isDark } = useTheme();
     const [user, setUser] = useState<any>(null);
     const [groups, setGroups] = useState<any[]>([]);
     const [balance, setBalance] = useState<any>(null);
@@ -109,15 +111,18 @@ export default function DashboardScreen() {
     const hasUnreadNotifications = notifications.some((item) => !item.leido);
 
     return (
-        <View style={styles.root}>
-            <StatusBar barStyle="light-content" backgroundColor={BRAND_DARK} />
+        <View style={[styles.root, { backgroundColor: colors.background }]}>
+            <StatusBar barStyle="light-content" backgroundColor={isDark ? "#07111F" : BRAND_DARK} />
 
             <ScrollView
                 style={styles.container}
                 contentContainerStyle={styles.content}
                 showsVerticalScrollIndicator={false}
             >
-                <View style={styles.hero}>
+                <View style={[
+                    styles.hero,
+                    { backgroundColor: isDark ? "#07111F" : BRAND_DARK },
+                ]}>
                     <View style={styles.heroGlowTop} />
                     <View style={styles.heroGlowBottom} />
 
@@ -197,8 +202,8 @@ export default function DashboardScreen() {
                 >
                     <View style={styles.sectionHeader}>
                         <View>
-                            <Text style={styles.sectionEyebrow}>Operaciones</Text>
-                            <Text style={styles.sectionTitle}>Acciones rapidas</Text>
+                            <Text style={[styles.sectionEyebrow, { color: isDark ? "#64748B" : "#64748B" }]}>Operaciones</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.text }]}>Acciones rapidas</Text>
                         </View>
                     </View>
 
@@ -241,8 +246,8 @@ export default function DashboardScreen() {
                 >
                     <View style={styles.sectionHeader}>
                         <View>
-                            <Text style={styles.sectionEyebrow}>Resumen</Text>
-                            <Text style={styles.sectionTitle}>Mis grupos</Text>
+                            <Text style={[styles.sectionEyebrow, { color: isDark ? "#64748B" : "#64748B" }]}>Resumen</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.text }]}>Mis grupos</Text>
                         </View>
                         {groups.length > 0 && (
                             <TouchableOpacity onPress={() => router.push("/groups" as any)}>
@@ -255,12 +260,18 @@ export default function DashboardScreen() {
                     </View>
 
                     {groups.length === 0 ? (
-                        <View style={styles.emptyCard}>
+                        <View style={[
+                            styles.emptyCard,
+                            {
+                                backgroundColor: colors.card,
+                                borderColor: isDark ? "#1E293B" : "transparent",
+                            },
+                        ]}>
                             <View style={styles.emptyIconBox}>
                                 <Ionicons name="people-outline" size={28} color={BRAND_BLUE} />
                             </View>
-                            <Text style={styles.emptyTitle}>Sin grupos aun</Text>
-                            <Text style={styles.emptySubtitle}>
+                            <Text style={[styles.emptyTitle, { color: colors.text }]}>Sin grupos aun</Text>
+                            <Text style={[styles.emptySubtitle, { color: colors.subtitle }]}>
                                 Crea tu primer grupo para empezar a dividir gastos.
                             </Text>
                             <TouchableOpacity
@@ -297,8 +308,8 @@ export default function DashboardScreen() {
                 >
                     <View style={styles.sectionHeader}>
                         <View>
-                            <Text style={styles.sectionEyebrow}>Ultimos movimientos</Text>
-                            <Text style={styles.sectionTitle}>Actividad</Text>
+                            <Text style={[styles.sectionEyebrow, { color: isDark ? "#64748B" : "#64748B" }]}>Ultimos movimientos</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.text }]}>Actividad</Text>
                         </View>
                         <TouchableOpacity onPress={() => router.push("/activity" as any)}>
                             <View style={styles.viewAllRow}>
@@ -308,16 +319,22 @@ export default function DashboardScreen() {
                         </TouchableOpacity>
                     </View>
 
-                    <View style={styles.activityCard}>
+                    <View style={[
+                        styles.activityCard,
+                        {
+                            backgroundColor: colors.card,
+                            borderColor: isDark ? "#1E293B" : "transparent",
+                        },
+                    ]}>
                         {notifications.length === 0 ? (
                             <View style={styles.emptyActivity}>
                                 <View style={styles.emptyActivityIcon}>
                                     <Ionicons name="notifications-outline" size={26} color={BRAND_BLUE} />
                                 </View>
-                                <Text style={styles.emptyActivityTitle}>
+                                <Text style={[styles.emptyActivityTitle, { color: colors.text }]}>
                                     Sin actividad reciente
                                 </Text>
-                                <Text style={styles.emptyActivitySubtitle}>
+                                <Text style={[styles.emptyActivitySubtitle, { color: colors.subtitle }]}>
                                     Aqui apareceran pagos, gastos y movimientos.
                                 </Text>
                             </View>

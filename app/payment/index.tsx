@@ -24,6 +24,7 @@ import {
 import {
     COLORS,
 } from "@/src/styles/colors";
+import { useTheme } from "@/src/context/ThemeContext";
 import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
 import { useAppRefresh } from "@/src/utils/appEvents";
 import { Ionicons } from "@expo/vector-icons";
@@ -69,6 +70,7 @@ const buildPayDebtRoute = (deuda: any, returnParam: string) => {
 };
 
 export default function PaymentsScreen() {
+    const { colors, isDark } = useTheme();
     const { returnTo } = useLocalSearchParams();
     const shouldReturnToDashboard = returnTo === "dashboard";
 
@@ -182,7 +184,7 @@ export default function PaymentsScreen() {
     };
 
     return (
-        <View style={styles.root}>
+        <View style={[styles.root, { backgroundColor: colors.background }]}>
             <StatusBar barStyle="light-content" />
             <AmbientScreenBackground intensity="medium" />
 
@@ -243,7 +245,14 @@ export default function PaymentsScreen() {
                     </View>
 
                     <TouchableOpacity
-                        style={styles.historyButton}
+                        style={[
+                            styles.historyButton,
+                            {
+                                backgroundColor: colors.card,
+                                borderColor: colors.border,
+                                shadowColor: isDark ? "#000000" : "#94A3B8",
+                            },
+                        ]}
                         onPress={() => router.push(
                             shouldReturnToDashboard
                                 ? "/payment/history?returnTo=dashboard"
@@ -251,23 +260,23 @@ export default function PaymentsScreen() {
                         )}
                         activeOpacity={0.85}
                     >
-                        <View style={styles.historyIconBox}>
+                        <View style={[styles.historyIconBox, { backgroundColor: isDark ? "rgba(59,130,246,0.16)" : "#EEF2FF" }]}>
                             <Ionicons name="receipt-outline" size={19} color={COLORS.primary} />
                         </View>
                         <View style={styles.historyTextBox}>
-                            <Text style={styles.historyTitle}>Historial y recibos</Text>
-                            <Text style={styles.historySubtitle}>Revisa pagos enviados, recibidos y pendientes</Text>
+                            <Text style={[styles.historyTitle, { color: colors.text }]}>Historial y recibos</Text>
+                            <Text style={[styles.historySubtitle, { color: colors.subtitle }]}>Revisa pagos enviados, recibidos y pendientes</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
                     </TouchableOpacity>
 
-                    <View style={styles.filterTabs}>
+                    <View style={[styles.filterTabs, { backgroundColor: isDark ? "#111827" : "#E2E8F0" }]}>
                         <TouchableOpacity
-                            style={[styles.filterTab, viewFilter === "PENDING" && styles.filterTabActive]}
+                            style={[styles.filterTab, viewFilter === "PENDING" && [styles.filterTabActive, { backgroundColor: colors.card }]]}
                             onPress={() => setViewFilter("PENDING")}
                             activeOpacity={0.8}
                         >
-                            <Text style={[styles.filterTabText, viewFilter === "PENDING" && styles.filterTabTextActive]}>
+                            <Text style={[styles.filterTabText, { color: colors.subtitle }, viewFilter === "PENDING" && [styles.filterTabTextActive, { color: colors.text }]]}>
                                 Por pagar
                             </Text>
                             {deudas.length > 0 && (
@@ -278,11 +287,11 @@ export default function PaymentsScreen() {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.filterTab, viewFilter === "SENT" && styles.filterTabActive]}
+                            style={[styles.filterTab, viewFilter === "SENT" && [styles.filterTabActive, { backgroundColor: colors.card }]]}
                             onPress={() => setViewFilter("SENT")}
                             activeOpacity={0.8}
                         >
-                            <Text style={[styles.filterTabText, viewFilter === "SENT" && styles.filterTabTextActive]}>
+                            <Text style={[styles.filterTabText, { color: colors.subtitle }, viewFilter === "SENT" && [styles.filterTabTextActive, { color: colors.text }]]}>
                                 Enviados
                             </Text>
                             {sentPayments.length > 0 && (
@@ -300,7 +309,11 @@ export default function PaymentsScreen() {
                             contentContainerStyle={styles.groupFilters}
                         >
                             <TouchableOpacity
-                                style={[styles.groupFilterChip, selectedGroup === "ALL" && styles.groupFilterChipActive]}
+                                style={[
+                                    styles.groupFilterChip,
+                                    { backgroundColor: colors.card, borderColor: colors.border },
+                                    selectedGroup === "ALL" && styles.groupFilterChipActive,
+                                ]}
                                 onPress={() => setSelectedGroup("ALL")}
                                 activeOpacity={0.8}
                             >
@@ -311,7 +324,11 @@ export default function PaymentsScreen() {
                             {groups.map(([groupId, groupName]) => (
                                 <TouchableOpacity
                                     key={groupId}
-                                    style={[styles.groupFilterChip, selectedGroup === groupId && styles.groupFilterChipActive]}
+                                    style={[
+                                        styles.groupFilterChip,
+                                        { backgroundColor: colors.card, borderColor: colors.border },
+                                        selectedGroup === groupId && styles.groupFilterChipActive,
+                                    ]}
                                     onPress={() => setSelectedGroup(groupId)}
                                     activeOpacity={0.8}
                                 >
@@ -324,18 +341,18 @@ export default function PaymentsScreen() {
                     )}
 
                     {loading ? (
-                        <View style={styles.emptyCard}>
+                        <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                             <Ionicons name="hourglass-outline" size={42} color="#94A3B8" style={styles.emptyIcon} />
-                            <Text style={styles.emptyTitle}>Cargando pagos</Text>
-                            <Text style={styles.emptySubtitle}>
+                            <Text style={[styles.emptyTitle, { color: colors.text }]}>Cargando pagos</Text>
+                            <Text style={[styles.emptySubtitle, { color: colors.subtitle }]}>
                                 Estamos revisando tus deudas y pagos pendientes.
                             </Text>
                         </View>
                     ) : errorMessage ? (
-                        <View style={styles.emptyCard}>
+                        <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                             <Ionicons name="alert-circle-outline" size={42} color="#DC2626" style={styles.emptyIcon} />
-                            <Text style={styles.emptyTitle}>No se pudo cargar</Text>
-                            <Text style={styles.emptySubtitle}>{errorMessage}</Text>
+                            <Text style={[styles.emptyTitle, { color: colors.text }]}>No se pudo cargar</Text>
+                            <Text style={[styles.emptySubtitle, { color: colors.subtitle }]}>{errorMessage}</Text>
                             <TouchableOpacity
                                 style={styles.emptyAction}
                                 onPress={loadData}
@@ -345,10 +362,10 @@ export default function PaymentsScreen() {
                             </TouchableOpacity>
                         </View>
                     ) : viewFilter === "PENDING" && filteredDebts.length === 0 ? (
-                        <View style={styles.emptyCard}>
+                        <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                             <Ionicons name="checkmark-circle-outline" size={42} color="#16A34A" style={styles.emptyIcon} />
-                            <Text style={styles.emptyTitle}>¡Estás al día!</Text>
-                            <Text style={styles.emptySubtitle}>
+                            <Text style={[styles.emptyTitle, { color: colors.text }]}>¡Estás al día!</Text>
+                            <Text style={[styles.emptySubtitle, { color: colors.subtitle }]}>
                                 No tienes deudas pendientes por pagar.
                             </Text>
                             <TouchableOpacity
@@ -361,12 +378,19 @@ export default function PaymentsScreen() {
                         </View>
                     ) : viewFilter === "PENDING" ? (
                         <View>
-                            <Text style={styles.listTitle}>Deudas pendientes</Text>
+                            <Text style={[styles.listTitle, { color: colors.text }]}>Deudas pendientes</Text>
 
                             {filteredDebts.map((deuda, index) => (
                                 <TouchableOpacity
                                     key={index}
-                                    style={styles.debtCard}
+                                    style={[
+                                        styles.debtCard,
+                                        {
+                                            backgroundColor: colors.card,
+                                            borderColor: colors.border,
+                                            shadowColor: isDark ? "#000000" : "#94A3B8",
+                                        },
+                                    ]}
                                     onPress={() => {
                                         const returnParam = shouldReturnToDashboard
                                             ? "&returnTo=paymentDashboard"
@@ -384,10 +408,10 @@ export default function PaymentsScreen() {
                                     </View>
 
                                     <View style={styles.debtInfo}>
-                                        <Text style={styles.debtTitle}>
+                                        <Text style={[styles.debtTitle, { color: colors.text }]}>
                                             {deuda.acreedor}
                                         </Text>
-                                        <Text style={styles.debtGroupText}>
+                                        <Text style={[styles.debtGroupText, { color: colors.subtitle }]}>
                                             {deuda.grupoNombre || deuda.grupo || "Grupo compartido"}
                                         </Text>
                                         <View style={styles.debtMeta}>
@@ -424,20 +448,26 @@ export default function PaymentsScreen() {
                             )}
                         </View>
                     ) : visibleSentPayments.length === 0 ? (
-                        <View style={styles.emptyCard}>
+                        <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                             <Ionicons name="time-outline" size={42} color="#D97706" style={styles.emptyIcon} />
-                            <Text style={styles.emptyTitle}>Sin pagos enviados</Text>
-                            <Text style={styles.emptySubtitle}>
+                            <Text style={[styles.emptyTitle, { color: colors.text }]}>Sin pagos enviados</Text>
+                            <Text style={[styles.emptySubtitle, { color: colors.subtitle }]}>
                                 Los pagos pendientes de confirmación aparecerán aquí. Si un pago no es recibido, volverás a verlo en tu historial.
                             </Text>
                         </View>
                     ) : (
                         <View style={styles.sentSectionInline}>
-                            <Text style={styles.listTitle}>Esperando confirmacion</Text>
+                            <Text style={[styles.listTitle, { color: colors.text }]}>Esperando confirmacion</Text>
                             {visibleSentPayments.map((payment) => (
                                 <TouchableOpacity
                                     key={payment.id}
-                                    style={styles.sentCard}
+                                    style={[
+                                        styles.sentCard,
+                                        {
+                                            backgroundColor: isDark ? "rgba(217,119,6,0.12)" : "#FFFBEB",
+                                            borderColor: isDark ? "rgba(217,119,6,0.28)" : "#FDE68A",
+                                        },
+                                    ]}
                                     onPress={() => router.push({
                                         pathname: "/payment/receipt",
                                         params: {
@@ -451,10 +481,10 @@ export default function PaymentsScreen() {
                                         <Ionicons name="time-outline" size={20} color="#D97706" />
                                     </View>
                                     <View style={styles.debtInfo}>
-                                        <Text style={styles.debtTitle}>
+                                        <Text style={[styles.debtTitle, { color: colors.text }]}>
                                             Pago enviado a {payment.acreedor}
                                         </Text>
-                                        <Text style={styles.sentSubtitle}>
+                                        <Text style={[styles.sentSubtitle, { color: isDark ? "#FBBF24" : "#92400E" }]}>
                                             {payment.grupoNombre || "Grupo"} - {payment.metodoPago || "Transferencia"}
                                         </Text>
                                         <View style={styles.pendingChip}>
@@ -471,17 +501,26 @@ export default function PaymentsScreen() {
 
                     {viewFilter === "PENDING" && sentPayments.length > 0 && (
                         <View style={styles.sentSection}>
-                            <Text style={styles.listTitle}>Esperando confirmación</Text>
+                            <Text style={[styles.listTitle, { color: colors.text }]}>Esperando confirmación</Text>
                             {sentPayments.map((payment) => (
-                                <View key={payment.id} style={styles.sentCard}>
+                                <View
+                                    key={payment.id}
+                                    style={[
+                                        styles.sentCard,
+                                        {
+                                            backgroundColor: isDark ? "rgba(217,119,6,0.12)" : "#FFFBEB",
+                                            borderColor: isDark ? "rgba(217,119,6,0.28)" : "#FDE68A",
+                                        },
+                                    ]}
+                                >
                                     <View style={styles.sentIconBox}>
                                         <Ionicons name="time-outline" size={20} color="#D97706" />
                                     </View>
                                     <View style={styles.debtInfo}>
-                                        <Text style={styles.debtTitle}>
+                                        <Text style={[styles.debtTitle, { color: colors.text }]}>
                                             Pago enviado a {payment.acreedor}
                                         </Text>
-                                        <Text style={styles.sentSubtitle}>
+                                        <Text style={[styles.sentSubtitle, { color: isDark ? "#FBBF24" : "#92400E" }]}>
                                             Cuando lo confirme, esta deuda quedará liquidada.
                                         </Text>
                                     </View>

@@ -125,14 +125,14 @@ export default function ServerDownScreen() {
                 <View style={styles.gridLineB} />
             </View>
 
-            <Animated.View
-                style={[
-                    styles.content,
-                    {
-                        opacity: fadeAnim,
-                        transform: [{ translateY: cardY }],
-                    },
-                ]}
+            <Animated.ScrollView
+                style={{
+                    opacity: fadeAnim,
+                    transform: [{ translateY: cardY }],
+                }}
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
+                bounces
             >
                 <View style={styles.brandRow}>
                     <Image
@@ -227,7 +227,7 @@ export default function ServerDownScreen() {
                         text="Cuando vuelva el servicio, te llevaremos a tu cuenta."
                     />
                 </View>
-            </Animated.View>
+            </Animated.ScrollView>
         </View>
     );
 }
@@ -303,11 +303,12 @@ const styles = StyleSheet.create({
     },
 
     content: {
-        flex: 1,
+        flexGrow: 1,
         paddingHorizontal: 22,
         paddingTop: 56,
-        paddingBottom: 28,
+        paddingBottom: 40,
         justifyContent: "center",
+        minHeight: "100%",
     },
 
     brandRow: {

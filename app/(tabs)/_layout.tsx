@@ -22,10 +22,6 @@ import {
 } from "@expo/vector-icons";
 
 import {
-    COLORS,
-} from "@/src/styles/colors";
-
-import {
     getPendingInvitations,
     getUnreadNotificationsCount,
 } from "@/src/services/notificationService";
@@ -35,6 +31,9 @@ import {
 import {
     useAppRefresh,
 } from "@/src/utils/appEvents";
+import {
+    useTheme,
+} from "@/src/context/ThemeContext";
 
 /* ── Ícono personalizado con badge ── */
 function TabIcon({
@@ -52,7 +51,12 @@ function TabIcon({
 }) {
     return (
         <View style={tabIconStyles.wrapper}>
-            {focused && <View style={tabIconStyles.activePill} />}
+            {focused && (
+                <View style={[
+                    tabIconStyles.activePill,
+                    { backgroundColor: color },
+                ]} />
+            )}
             <Ionicons
                 name={focused ? name.replace("-outline", "") : name}
                 size={size}
@@ -84,7 +88,6 @@ const tabIconStyles = StyleSheet.create({
         width: 36,
         height: 4,
         borderRadius: 2,
-        backgroundColor: COLORS.primary,
     },
 
     badge: {
@@ -113,6 +116,7 @@ export default function TabsLayout() {
 
     const [unreadNotifications, setUnreadNotifications] = useState(0);
     const checkingBackendRef = useRef(false);
+    const { colors, isDark } = useTheme();
 
     const checkBackendAvailability = useCallback(async () => {
         if (checkingBackendRef.current) return;
@@ -165,8 +169,8 @@ export default function TabsLayout() {
         <Tabs
             screenOptions={{
                 headerShown: false,
-                tabBarActiveTintColor: COLORS.primary,
-                tabBarInactiveTintColor: "#94A3B8",
+                tabBarActiveTintColor: colors.primary,
+                tabBarInactiveTintColor: isDark ? "#64748B" : "#94A3B8",
                 tabBarShowLabel: true,
                 tabBarLabelStyle: {
                     fontSize: 11,
@@ -178,10 +182,10 @@ export default function TabsLayout() {
                     paddingBottom: Platform.OS === "ios" ? 22 : 10,
                     paddingTop: 10,
                     borderTopWidth: 0,
-                    backgroundColor: "#FFFFFF",
+                    backgroundColor: isDark ? "#0B1220" : "#FFFFFF",
                     elevation: 0,
-                    shadowColor: "#94A3B8",
-                    shadowOpacity: 0.12,
+                    shadowColor: isDark ? "#000000" : "#94A3B8",
+                    shadowOpacity: isDark ? 0.28 : 0.12,
                     shadowOffset: { width: 0, height: -4 },
                     shadowRadius: 16,
                 },

@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "@/src/styles/colors";
+import { useTheme } from "@/src/context/ThemeContext";
 
 type Props = {
     title: string;
@@ -12,9 +12,12 @@ type Props = {
 };
 
 export default function ActivityItem({ title, subtitle, amount, time, positive = false, onPress }: Props) {
+    const { colors, isDark } = useTheme();
     const iconName  = positive ? "arrow-down" : "arrow-up";
     const iconColor = positive ? "#10B981" : "#2563EB";
-    const iconBg    = positive ? "#DCFCE7" : "#DBEAFE";
+    const iconBg    = positive
+        ? isDark ? "rgba(16,185,129,0.16)" : "#DCFCE7"
+        : isDark ? "rgba(37,99,235,0.18)" : "#DBEAFE";
 
     return (
         <TouchableOpacity
@@ -29,21 +32,24 @@ export default function ActivityItem({ title, subtitle, amount, time, positive =
                 <View style={[styles.iconBox, { backgroundColor: iconBg }]}>
                     <Ionicons name={iconName} size={18} color={iconColor} />
                 </View>
-                <View style={styles.timelineLine} />
+                <View style={[
+                    styles.timelineLine,
+                    { backgroundColor: isDark ? "#1E293B" : "#F1F5F9" },
+                ]} />
             </View>
 
             {/* Contenido */}
             <View style={styles.content}>
                 <View style={styles.topRow}>
-                    <Text style={styles.title} numberOfLines={1}>{title}</Text>
+                    <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{title}</Text>
                     {amount && (
-                        <Text style={[styles.amount, { color: positive ? "#10B981" : COLORS.text }]}>
+                        <Text style={[styles.amount, { color: positive ? "#10B981" : colors.text }]}>
                             {amount}
                         </Text>
                     )}
                 </View>
-                <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
-                <Text style={styles.time}>{time}</Text>
+                <Text style={[styles.subtitle, { color: colors.subtitle }]} numberOfLines={1}>{subtitle}</Text>
+                <Text style={[styles.time, { color: isDark ? "#64748B" : "#CBD5E1" }]}>{time}</Text>
             </View>
 
         </TouchableOpacity>
@@ -78,7 +84,7 @@ const styles = StyleSheet.create({
         alignItems: "flex-start", gap: 8,
     },
     title: {
-        fontSize: 15, fontWeight: "700", color: COLORS.text,
+        fontSize: 15, fontWeight: "700",
         flex: 1, lineHeight: 22, letterSpacing: 0,
     },
     amount: {

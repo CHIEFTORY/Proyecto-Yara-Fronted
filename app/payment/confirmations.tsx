@@ -28,6 +28,7 @@ import { api } from "@/src/services/api";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { emitAppEvent, useAppRefresh } from "@/src/utils/appEvents";
+import { useTheme } from "@/src/context/ThemeContext";
 
 const AVATAR_COLORS = [
     { bg: "#DBEAFE", text: "#2563EB" },
@@ -39,6 +40,7 @@ const AVATAR_COLORS = [
 ];
 
 export default function ConfirmationsScreen() {
+    const { colors, isDark } = useTheme();
     const { returnTo } = useLocalSearchParams();
     const shouldReturnToDashboard = returnTo === "dashboard";
 
@@ -162,7 +164,7 @@ export default function ConfirmationsScreen() {
     };
 
     return (
-        <View style={styles.root}>
+        <View style={[styles.root, { backgroundColor: colors.background }]}>
             <StatusBar barStyle="light-content" />
             <AmbientScreenBackground intensity="medium" />
 
@@ -218,25 +220,26 @@ export default function ConfirmationsScreen() {
                         refreshing={refreshing}
                         onRefresh={handleRefresh}
                         tintColor={COLORS.primary}
+                        colors={[COLORS.primary]}
                     />
                 }
             >
 
                 {loading ? (
-                    <Animated.View style={[styles.emptyState, { opacity: fadeAnim }]}>
-                        <View style={styles.emptyIconBox}>
+                    <Animated.View style={[styles.emptyState, { opacity: fadeAnim, backgroundColor: colors.card, borderColor: colors.border }]}>
+                        <View style={[styles.emptyIconBox, { backgroundColor: isDark ? "rgba(59,130,246,0.16)" : "#EEF2FF" }]}>
                             <Ionicons name="hourglass-outline" size={48} color={COLORS.primary} />
                         </View>
-                        <Text style={styles.emptyTitle}>Cargando pagos</Text>
-                        <Text style={styles.emptySubtitle}>Estamos revisando los pagos por confirmar.</Text>
+                        <Text style={[styles.emptyTitle, { color: colors.text }]}>Cargando pagos</Text>
+                        <Text style={[styles.emptySubtitle, { color: colors.subtitle }]}>Estamos revisando los pagos por confirmar.</Text>
                     </Animated.View>
                 ) : errorMessage ? (
-                    <Animated.View style={[styles.emptyState, { opacity: fadeAnim }]}>
+                    <Animated.View style={[styles.emptyState, { opacity: fadeAnim, backgroundColor: colors.card, borderColor: colors.border }]}>
                         <View style={[styles.emptyIconBox, styles.errorIconBox]}>
                             <Ionicons name="cloud-offline-outline" size={48} color="#DC2626" />
                         </View>
-                        <Text style={styles.emptyTitle}>No se pudo cargar</Text>
-                        <Text style={styles.emptySubtitle}>{errorMessage}</Text>
+                        <Text style={[styles.emptyTitle, { color: colors.text }]}>No se pudo cargar</Text>
+                        <Text style={[styles.emptySubtitle, { color: colors.subtitle }]}>{errorMessage}</Text>
                         <TouchableOpacity
                             style={styles.retryButton}
                             onPress={loadData}
@@ -246,8 +249,8 @@ export default function ConfirmationsScreen() {
                         </TouchableOpacity>
                     </Animated.View>
                 ) : payments.length === 0 ? (
-                    <Animated.View style={[styles.emptyState, { opacity: fadeAnim }]}>
-                        <View style={styles.emptyIconBox}>
+                    <Animated.View style={[styles.emptyState, { opacity: fadeAnim, backgroundColor: colors.card, borderColor: colors.border }]}>
+                        <View style={[styles.emptyIconBox, { backgroundColor: isDark ? "rgba(16,185,129,0.16)" : "#DCFCE7" }]}>
                             <Ionicons name="checkmark-circle" size={52} color="#16A34A" />
                         </View>
                         <Text style={styles.emptyTitle}>¡Todo al día!</Text>
@@ -259,9 +262,9 @@ export default function ConfirmationsScreen() {
                     <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 
                         {/* Info banner */}
-                        <View style={styles.infoBanner}>
+                        <View style={[styles.infoBanner, { backgroundColor: isDark ? "rgba(59,130,246,0.12)" : "#DBEAFE", borderColor: isDark ? "rgba(59,130,246,0.28)" : "#BFDBFE" }]}>
                             <Ionicons name="information-circle-outline" size={18} color="#1D4ED8" style={styles.infoBannerIcon} />
-                            <Text style={styles.infoBannerText}>
+                            <Text style={[styles.infoBannerText, { color: isDark ? "#BFDBFE" : "#1E40AF" }]}>
                                 Confirma solo si realmente recibiste el dinero. Esto liquidará la deuda.
                             </Text>
                         </View>
@@ -271,7 +274,7 @@ export default function ConfirmationsScreen() {
                             const method = payment.metodoPago || "Transferencia";
                             const methodTheme = getPaymentMethodTheme(payment.metodoTransferencia, method);
                             return (
-                                <View key={payment.id} style={styles.card}>
+                                <View key={payment.id} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
 
                                     {/* Franja lateral verde */}
                                     <View style={[styles.cardAccent, { backgroundColor: methodTheme.color }]} />
@@ -285,7 +288,7 @@ export default function ConfirmationsScreen() {
                                         </View>
 
                                         <View style={styles.cardInfo}>
-                                            <Text style={styles.deudorName}>{payment.deudor}</Text>
+                                            <Text style={[styles.deudorName, { color: colors.text }]}>{payment.deudor}</Text>
                                             <View style={styles.subtitleRow}>
                                                 <View style={[
                                                     styles.methodBadge,
@@ -299,12 +302,12 @@ export default function ConfirmationsScreen() {
                                                     </Text>
                                                 </View>
                                             </View>
-                                            <Text style={styles.cardSubtitle}>
+                                            <Text style={[styles.cardSubtitle, { color: colors.subtitle }]}>
                                                 {payment.grupoNombre
                                                     ? `Grupo: ${payment.grupoNombre}`
                                                     : "Pago pendiente de confirmacion"}
                                             </Text>
-                                            <Text style={styles.cardDate}>
+                                            <Text style={[styles.cardDate, { color: colors.subtitle }]}>
                                                 {payment.fecha
                                                     ? formatPaymentDate(payment.fecha)
                                                     : "Fecha no disponible"}
@@ -313,7 +316,7 @@ export default function ConfirmationsScreen() {
 
                                         {/* Monto */}
                                         <View style={styles.amountBox}>
-                                            <Text style={styles.amountValue}>
+                                            <Text style={[styles.amountValue, { color: colors.text }]}>
                                                 S/ {Number(payment.monto).toFixed(2)}
                                             </Text>
                                             <Text style={styles.amountLabel}>recibido</Text>

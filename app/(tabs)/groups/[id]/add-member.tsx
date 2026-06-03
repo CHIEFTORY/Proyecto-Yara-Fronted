@@ -21,6 +21,7 @@ import {
     getGroupUsers,
 } from "@/src/services/groupService";
 import { getMeRequest } from "@/src/services/authService";
+import { useTheme } from "@/src/context/ThemeContext";
 
 // ─── Design Tokens (light — colores originales conservados) ──────────────────
 const PALETTE = {
@@ -63,6 +64,7 @@ function UserCard({
     memberIds: Set<number>;
     invitingIds: Set<number>;
 }) {
+    const { colors, isDark } = useTheme();
     const translateY = useRef(new Animated.Value(20)).current;
     const opacity    = useRef(new Animated.Value(0)).current;
     const scaleBtn   = useRef(new Animated.Value(1)).current;
@@ -93,7 +95,7 @@ function UserCard({
 
     return (
         <Animated.View style={[styles.cardWrap, { opacity, transform: [{ translateY }] }]}>
-            <View style={styles.userCard}>
+            <View style={[styles.userCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
 
                 {/* Avatar */}
                 <View style={[styles.avatar, { backgroundColor: avatar.bg }]}>
@@ -103,8 +105,8 @@ function UserCard({
 
                 {/* Info */}
                 <View style={styles.userInfo}>
-                    <Text style={styles.name} numberOfLines={1}>{item.nombre}</Text>
-                    <Text style={styles.email} numberOfLines={1}>{item.email}</Text>
+                    <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{item.nombre}</Text>
+                    <Text style={[styles.email, { color: colors.subtitle }]} numberOfLines={1}>{item.email}</Text>
                 </View>
 
                 {/* Botón */}
@@ -114,6 +116,7 @@ function UserCard({
                             styles.addButton,
                             disabled && styles.addButtonDone,
                             isMember && styles.addButtonMember,
+                            disabled && { backgroundColor: isDark ? "#111827" : PALETTE.surfaceHover, borderColor: colors.border },
                         ]}
                         onPress={() => !disabled && onAdd(item.id)}
                         onPressIn={onPressIn}
@@ -134,6 +137,7 @@ function UserCard({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function AddMemberScreen() {
+    const { colors, isDark } = useTheme();
     const { id, groupName } = useLocalSearchParams();
     const nombre = Array.isArray(groupName) ? groupName[0] : groupName || "tu grupo";
 
@@ -242,7 +246,7 @@ export default function AddMemberScreen() {
     const showEmpty = !loading && query.length >= 2 && users.length === 0;
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
 
             {/* Decoración sutil de fondo */}
             <View style={styles.bgBlob1} />
@@ -253,17 +257,17 @@ export default function AddMemberScreen() {
                 style={[styles.header, { opacity: headerOp, transform: [{ translateY: headerY }] }]}
             >
                 <TouchableOpacity
-                    style={styles.backButton}
+                    style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}
                     onPress={() => router.replace(`/groups/${id}` as any)}
                     activeOpacity={0.75}
                 >
-                    <Ionicons name="chevron-back" size={22} color={PALETTE.primary} />
+                    <Ionicons name="chevron-back" size={22} color={colors.text} />
                 </TouchableOpacity>
 
                 <View style={styles.headerText}>
-                    <Text style={styles.eyebrow}>GRUPO</Text>
-                    <Text style={styles.title}>Invitar a{"\n"}{nombre}</Text>
-                    <Text style={styles.subtitle}>Agrega personas a este grupo</Text>
+                    <Text style={[styles.eyebrow, { color: colors.subtitle }]}>GRUPO</Text>
+                    <Text style={[styles.title, { color: colors.text }]}>Invitar a{"\n"}{nombre}</Text>
+                    <Text style={[styles.subtitle, { color: colors.subtitle }]}>Agrega personas a este grupo</Text>
                 </View>
             </Animated.View>
 
@@ -271,6 +275,7 @@ export default function AddMemberScreen() {
             <Animated.View
                 style={[
                     styles.searchWrapper,
+                    { backgroundColor: colors.card, borderColor: colors.border },
                     focused && styles.searchWrapperFocused,
                     { opacity: searchOp, transform: [{ translateY: searchY }] },
                 ]}
@@ -278,8 +283,8 @@ export default function AddMemberScreen() {
                 <Ionicons name="search-outline" size={19} color={PALETTE.placeholder} />
                 <TextInput
                     placeholder="Buscar usuario..."
-                    placeholderTextColor={PALETTE.placeholder}
-                    style={styles.input}
+                    placeholderTextColor={isDark ? "#64748B" : PALETTE.placeholder}
+                    style={[styles.input, { color: colors.text }]}
                     value={query}
                     onChangeText={handleSearch}
                     onFocus={() => setFocused(true)}
@@ -298,17 +303,17 @@ export default function AddMemberScreen() {
             {loading && (
                 <View style={styles.loadingRow}>
                     <ActivityIndicator color={COLORS.primary} size="small" />
-                    <Text style={styles.loadingText}>Buscando...</Text>
+                    <Text style={[styles.loadingText, { color: colors.subtitle }]}>Buscando...</Text>
                 </View>
             )}
 
             {!checkingPermission && !canInvite && (
                 <View style={styles.emptyState}>
-                    <View style={styles.emptyIconBox}>
+                    <View style={[styles.emptyIconBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
                         <Ionicons name="lock-closed-outline" size={38} color={COLORS.primary} />
                     </View>
-                    <Text style={styles.emptyTitle}>Solo administradores</Text>
-                    <Text style={styles.emptySubtitle}>
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>Solo administradores</Text>
+                    <Text style={[styles.emptySubtitle, { color: colors.subtitle }]}>
                         Puedes ver el grupo, pero no invitar personas.
                     </Text>
                     <TouchableOpacity
@@ -324,11 +329,11 @@ export default function AddMemberScreen() {
             {/* ── HINT ── */}
             {canInvite && showHint && (
                 <View style={styles.emptyState}>
-                    <View style={styles.emptyIconBox}>
+                    <View style={[styles.emptyIconBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
                         <Ionicons name="people-outline" size={38} color={COLORS.primary} />
                     </View>
-                    <Text style={styles.emptyTitle}>Busca usuarios</Text>
-                    <Text style={styles.emptySubtitle}>
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>Busca usuarios</Text>
+                    <Text style={[styles.emptySubtitle, { color: colors.subtitle }]}>
                         Escribe un nombre o correo{"\n"}para comenzar
                     </Text>
                 </View>
@@ -337,11 +342,11 @@ export default function AddMemberScreen() {
             {/* ── SIN RESULTADOS ── */}
             {canInvite && showEmpty && (
                 <View style={styles.emptyState}>
-                    <View style={styles.emptyIconBox}>
+                    <View style={[styles.emptyIconBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
                         <Ionicons name="search-outline" size={38} color={COLORS.primary} />
                     </View>
-                    <Text style={styles.emptyTitle}>Sin resultados</Text>
-                    <Text style={styles.emptySubtitle}>
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>Sin resultados</Text>
+                    <Text style={[styles.emptySubtitle, { color: colors.subtitle }]}>
                         No encontramos usuarios con{"\n"}{`"${query}"`}
                     </Text>
                 </View>

@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { COLORS } from "@/src/styles/colors";
 import AmbientScreenBackground from "@/components/ui/AmbientScreenBackground";
+import { useTheme } from "@/src/context/ThemeContext";
 
 const FAQS = [
     {
@@ -58,6 +59,7 @@ const QUICK_ACTIONS = [
 ];
 
 export default function HelpSupportScreen() {
+    const { colors, isDark } = useTheme();
     const openEmail = () => {
         const subject = encodeURIComponent("Soporte Yara");
         const body = encodeURIComponent(
@@ -72,17 +74,17 @@ export default function HelpSupportScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
             <AmbientScreenBackground />
             <View style={styles.header}>
                 <TouchableOpacity
-                    style={styles.backButton}
+                    style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}
                     onPress={() => router.replace("/(tabs)/profile" as any)}
                     activeOpacity={0.75}
                 >
-                    <Ionicons name="chevron-back" size={22} color={COLORS.text} />
+                    <Ionicons name="chevron-back" size={22} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Ayuda y soporte</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>Ayuda y soporte</Text>
                 <View style={styles.headerSpacer} />
             </View>
 
@@ -101,8 +103,8 @@ export default function HelpSupportScreen() {
                     </Text>
                 </View>
 
-                <Text style={styles.sectionLabel}>ACCESOS RAPIDOS</Text>
-                <View style={styles.cardGroup}>
+                <Text style={[styles.sectionLabel, { color: colors.subtitle }]}>ACCESOS RAPIDOS</Text>
+                <View style={[styles.cardGroup, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     {QUICK_ACTIONS.map((item, index) => (
                         <TouchableOpacity
                             key={item.label}
@@ -110,12 +112,12 @@ export default function HelpSupportScreen() {
                             onPress={item.onPress}
                             activeOpacity={0.76}
                         >
-                            <View style={styles.actionIcon}>
+                            <View style={[styles.actionIcon, { backgroundColor: isDark ? "rgba(59,130,246,0.16)" : "#EEF2FF" }]}>
                                 <Ionicons name={item.icon as any} size={20} color={COLORS.primary} />
                             </View>
                             <View style={styles.actionTextBox}>
-                                <Text style={styles.actionTitle}>{item.label}</Text>
-                                <Text style={styles.actionDescription}>{item.description}</Text>
+                                <Text style={[styles.actionTitle, { color: colors.text }]}>{item.label}</Text>
+                                <Text style={[styles.actionDescription, { color: colors.subtitle }]}>{item.description}</Text>
                             </View>
                             <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
                             {index < QUICK_ACTIONS.length - 1 && <View style={styles.rowDivider} />}
@@ -123,23 +125,23 @@ export default function HelpSupportScreen() {
                     ))}
                 </View>
 
-                <Text style={styles.sectionLabel}>PREGUNTAS FRECUENTES</Text>
+                <Text style={[styles.sectionLabel, { color: colors.subtitle }]}>PREGUNTAS FRECUENTES</Text>
                 <View style={styles.faqList}>
                     {FAQS.map((item) => (
-                        <View key={item.title} style={styles.faqCard}>
+                        <View key={item.title} style={[styles.faqCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                             <View style={styles.faqTop}>
-                                <View style={styles.faqIcon}>
+                                <View style={[styles.faqIcon, { backgroundColor: isDark ? "rgba(59,130,246,0.16)" : "#EEF2FF" }]}>
                                     <Ionicons name={item.icon as any} size={19} color={COLORS.primary} />
                                 </View>
-                                <Text style={styles.faqTitle}>{item.title}</Text>
+                                <Text style={[styles.faqTitle, { color: colors.text }]}>{item.title}</Text>
                             </View>
-                            <Text style={styles.faqBody}>{item.body}</Text>
+                            <Text style={[styles.faqBody, { color: colors.subtitle }]}>{item.body}</Text>
                         </View>
                     ))}
                 </View>
 
-                <Text style={styles.sectionLabel}>CONTACTO</Text>
-                <View style={styles.contactCard}>
+                <Text style={[styles.sectionLabel, { color: colors.subtitle }]}>CONTACTO</Text>
+                <View style={[styles.contactCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <TouchableOpacity
                         style={styles.contactButton}
                         onPress={openEmail}
@@ -159,7 +161,7 @@ export default function HelpSupportScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <Text style={styles.footerText}>
+                <Text style={[styles.footerText, { color: colors.subtitle }]}>
                     Version 1.0.0 · {Platform.OS === "web" ? "Web" : "Mobile"}
                 </Text>
             </ScrollView>
